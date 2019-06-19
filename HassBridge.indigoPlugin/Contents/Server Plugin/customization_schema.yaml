@@ -1,0 +1,55 @@
+---
+"$schema": http://json-schema.org/draft-07/schema#
+description: HassBridge MQTT Customization File Schema
+type: object
+properties:
+  devices:
+    type: object
+
+    additionalProperties:
+      type: object
+      required:
+        - content_actions
+      properties:
+        content_actions:
+          type: object
+          additionalProperties:
+            oneOf:
+              - "$ref": "#/definitions/modificationAction"
+              - "$ref": "#/definitions/controlAction"
+
+
+definitions:
+  MQTTDevice:
+    type: object
+    properties:
+
+  BinarySensor:
+    type: object
+    properties:
+      bridge_type:
+        description: Bridge object type to use
+        type:
+
+
+      type:
+        description: An identifier for the type of action that is being defined.
+        type: string
+        enum:
+          - urn:cloudera:authorization:action:control
+      policies:
+        type: object
+  modificationAction:
+    type: object
+    required:
+      - type
+      - action
+    properties:
+      type:
+        description: An identifier for the type of action that is being defined.
+        type: string
+        enum:
+          - urn:cloudera:authorization:action:modification
+      action:
+        type: object
+additionalProperties: false

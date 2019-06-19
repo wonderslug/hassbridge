@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2019 Brian Towles
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is furnished
+  ~ to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all
+  ~ copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+  ~ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  ~ PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  ~ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  ~ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+<PluginConfig>
+    <Field id="hasettingsLabel" type="label">
+        <Label>Home Assistant Settings</Label>
+    </Field>
+    <!-- You can add a SupportURL element inside here if you want a context
+         sensitive help link on the config UI - otherwise it will just link
+         to the URL specified in the Info.plist. -->
+    <Field type="textfield" id="server_url" defaultvalue="http://localhost:8123">
+        <Label>Base URL:</Label>
+    </Field>
+    <Field type="checkbox" id="https_validate_cert" defaultvalue="true">
+        <Label>Accept Unvalidated SSL Certificates</Label>
+    </Field>
+    <Field type="textfield" id="access_token" defaultvalue="">
+        <Label>Access Token:</Label>
+    </Field>
+    <Field type="textfield" id="event_prefix" defaultvalue="indigo_hassbridge">
+        <Label>Event Name Prefix:</Label>
+    </Field>
+    <Field id="mqtt_seperator" type="separator"/>
+    <Field id="mqttsettingsLabel" type="label">
+        <Label>MQTT Settings</Label>
+    </Field>
+    <Field type="textfield" id="discovery_prefix" defaultvalue="homeassistant">
+        <Label>Home Assistant Discovery Prefix:</Label>
+    </Field>
+    <Field type="menu" id="mqtt_protocol" defaultValue="tcp">
+        <Label>Protocol</Label>
+        <List>
+            <Option value="tcp">mqtt://</Option>
+            <Option value="websockets">ws://</Option>
+        </List>
+    </Field>
+    <Field type="textfield" id="serverAddress" defaultvalue="localhost">
+        <Label>Server Address:</Label>
+    </Field>
+    <Field type="textfield" id="serverPort" defaultvalue="1883">
+        <Label>Server Port:</Label>
+    </Field>
+    <Field type="checkbox" id="mqtt_use_encryption" defaultValue="false">
+        <Label>Use Encryption:</Label>
+        <Description>(TLS/SSL)</Description>
+    </Field>
+    <Field type="checkbox" id="mqtt_allow_unvalidated" defaultValue="false" enabledBindingId="mqtt_use_encryption">
+        <Label>Allow Unvalidated Server:</Label>
+    </Field>
+    <Field type="textfield" id="serverUsername" defaultvalue="">
+        <Label>Username:</Label>
+    </Field>
+    <Field type="textfield" id="serverPassword" defaultvalue="" secure="true">
+        <Label>Password:</Label>
+    </Field>
+    <Field type="checkbox" id="mqtt_set_client_id" defaultValue="false">
+        <Label>Set Client Id:</Label>
+        <Description>(randomly generated if not set)</Description>
+    </Field>
+    <Field type="textfield" id="mqtt_client_id" defaultvalue="" visibleBindingId="mqtt_set_client_id" visibleBindingValue="true">
+        <Label>Client Id:</Label>
+    </Field>
+    <Field id="bridgable_seperator" type="separator"/>
+    <Field id="bridgableLabel" type="label">
+        <Label>Devices to Bridge</Label>
+    </Field>
+    <Field id="bridge_all" type="checkbox" defaultValue="false">
+        <Label>All Possible Devices:</Label>
+        <Description>(bridge all known device types)</Description>
+    </Field>
+    <Field id="devices" type="list" rows="10" visibleBindingId="bridge_all" visibleBindingValue="false">
+        <Label>Devices:</Label>
+        <List class="self" filter="stuff" method="bridgable_devices_list_generator"/>
+    </Field>
+
+    <Field id="create_battery_sensors" type="checkbox" defaultValue="false">
+        <Label>Create Battery Sensors:</Label>
+        <Description>(for battery powered devices)</Description>
+    </Field>
+
+    <Field id="variablesSeperator" type="separator"/>
+    <Field id="variablesLabel" type="label">
+        <Label>Variables</Label>
+    </Field>
+    <Field id="variables" type="list" rows="10">
+        <Label>Publish:</Label>
+        <List class="indigo.variables" filter="stuff"/>
+    </Field>
+    <Field id="customization_seperator" type="separator"/>
+    <Field id="customization_label" type="label">
+        <Label>Customization</Label>
+    </Field>
+    <Field type="checkbox" id="use_customization_file" defaultValue="false">
+        <Description>Use a Customization File</Description>
+    </Field>
+    <Field id="customization_file_path" type="textfield" enabledBindingId="use_customization_file" defaultValue="">
+        <Label>Customization File Path:</Label>
+    </Field>
+    <Field id="debugSeperator" type="separator"/>
+    <Field id="debuglabel" type="label">
+        <Label>Debug</Label>
+    </Field>
+    <Field id="showDebugInfo" type="checkbox">
+        <Label>Enable debugging:</Label>
+        <Description>(not recommended)</Description>
+    </Field>
+</PluginConfig>
+
+
