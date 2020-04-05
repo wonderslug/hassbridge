@@ -442,10 +442,9 @@ class Plugin(indigo.PluginBase):
             ha_entities = resp.json()
             for ha_entity in ha_entities:
                 if u'attributes' in ha_entity and u'indigo_id' in ha_entity[
-                    u'attributes']:
-                    self._ha_devices[str(
-                        ha_entity[u'attributes'][u'indigo_id'])].ha_entity_id = \
-                        ha_entity[u'entity_id']
+                    u'attributes'] and str(ha_entity[u'attributes'][u'indigo_id']) in self._ha_devices:
+                    self._ha_devices[str(ha_entity[u'attributes'][u'indigo_id'])].ha_entity_id = \
+                    ha_entity[u'entity_id']
                     self._ha_devices[str(ha_entity[u'attributes'][
                                              u'indigo_id'])].ha_friendly_name = \
                         ha_entity[u'attributes'][u'friendly_name']
@@ -465,7 +464,7 @@ class Plugin(indigo.PluginBase):
 
     def _register_ha_devices(self):
         for ha_dev_id, ha_dev in self._ha_devices.iteritems():
-            if isinstance(ha_dev, RegisterableDevice):
+            if ha_dev.id in indigo.devices and isinstance(ha_dev, RegisterableDevice):
                 ha_dev.register()
 
 
