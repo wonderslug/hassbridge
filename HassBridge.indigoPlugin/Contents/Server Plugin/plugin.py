@@ -29,9 +29,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), 'libs')))
 sys.path.insert(0, os.path.abspath(os.getcwd()))
 if __name__ == '__main__' and __package__ == None:
     imp.load_source('hassbridge',
-        os.path.normpath(os.path.join(os.getcwd(), '__init__.py')))
+                    os.path.normpath(os.path.join(os.getcwd(), '__init__.py')))
     imp.load_source('hassbridge.plugin',
-        os.path.normpath(os.path.join(os.getcwd(), 'plugin.py')))
+                    os.path.normpath(os.path.join(os.getcwd(), 'plugin.py')))
     __package__ = "hassbridge"
     __name__ = "hassbridge.plugin"
 
@@ -52,6 +52,7 @@ from insteon import (
     InsteonInputOutputTypesGenerator, InsteonRemoteTypesGenerator,
     InsteonBatteryPoweredSensorsTypeGenerator)
 from variables import VariableDefaultTypesGenerator
+from zwave import ZWaveDefaultTypesGenerator
 
 pVer = 0
 
@@ -67,7 +68,7 @@ class Plugin(indigo.PluginBase):
 
     def __init__(self, plugin_id, display_name, version, prefs):
         indigo.PluginBase.__init__(self, plugin_id, display_name, version,
-            prefs)
+                                   prefs)
         pVer = version
         plugin_instance = self
 
@@ -123,7 +124,7 @@ class Plugin(indigo.PluginBase):
         self._register_ha_devices()
 
     def bridgable_devices_list_generator(self, filter="", valuesDict=None,
-            typeId="", targetId=0):
+                                         typeId="", targetId=0):
         self.logger.debug(u"Getting list of Bridgable Devices")
         return_list = list()
         for dev in indigo.devices:
@@ -136,9 +137,6 @@ class Plugin(indigo.PluginBase):
     ####
 
     def closedPrefsConfigUi(self, values_dict, user_cancelled):
-        # Since the diaself.logger closed we want to set the debug flag - if you don't directly use
-        # a plugin's properties (and for debugself.logger we don't) you'll want to translate it to
-        # the appropriate stuff here.
         if not user_cancelled:
             self.update_perfs(values_dict)
 
@@ -213,9 +211,9 @@ class Plugin(indigo.PluginBase):
             self._disconnect_from_mqtt_broker()
             self.logger.info("Connecting to the MQTT Server...")
             self.mqtt_client.username_pw_set(username=self.config.mqtt_username,
-                password=self.config.mqtt_password)
+                                             password=self.config.mqtt_password)
             self.mqtt_client.connect(self.config.mqtt_server,
-                self.config.mqtt_port, 59)
+                                     self.config.mqtt_port, 59)
             self.logger.info("Connected to MQTT Server!")
             self.mqtt_client.loop_start()
         except Exception:
@@ -229,7 +227,8 @@ class Plugin(indigo.PluginBase):
                 self.handle_exception(t, v, tb)
                 raise
 
-    # The callback for when the client receives a CONNACK response from the server.
+    # The callback for when the client receives
+    # a CONNACK response from the server.
     def on_mqtt_connect(self, client, userdata, flags, rc):
         try:
             self.logger.debug(
@@ -280,7 +279,8 @@ class Plugin(indigo.PluginBase):
     ####
     def _update_ha_device(self, orig, new):
         try:
-            # call the base's implementation first just to make sure all the right things happen elsewhere
+            # call the base's implementation first just to make
+            # sure all the right things happen elsewhere
             if str(new.id) in self._ha_device_followers:
                 for ha_device in self._ha_device_followers[str(new.id)]:
                     if isinstance(ha_device, UpdatableDevice):
@@ -301,7 +301,7 @@ class Plugin(indigo.PluginBase):
     def _process_command(self, cmd):
         # Handle Insteon Commands
         if isinstance(cmd,
-                indigo.InsteonCmd) and cmd.address in self._ha_device_address_mapping:
+                      indigo.InsteonCmd) and cmd.address in self._ha_device_address_mapping:
             device_map = self._ha_device_address_mapping[cmd.address]
             for ha_device in device_map:
                 event = payload = None
@@ -314,9 +314,12 @@ class Plugin(indigo.PluginBase):
     def _send_event(self, event, payload):
         try:
             self.logger.debug(u'Sending event {} to {} with payload {}'
-                .format(event, self.config.hass_url, json.dumps(payload)))
+                              .format(event, self.config.hass_url,
+                                      json.dumps(payload)))
             url = '{}/api/events/{}'.format(self.config.hass_url, event)
-            resp = self.config.hass_event_session.post(url, json=payload,
+            resp = self.config.hass_event_session.post(
+                url,
+                json=payload,
                 verify=self.config.hass_ssl_validate)
             if resp.status_code is not requests.codes['OK']:
                 self.logger.warn(
@@ -392,7 +395,7 @@ class Plugin(indigo.PluginBase):
                         # setup the followers list
                         if str(
                                 indigo_variable.id) not in new_device_followers_map and ha_device.is_following(
-                                str(indigo_variable.id)):
+                            str(indigo_variable.id)):
                             new_device_followers_map[
                                 str(indigo_variable.id)] = []
                         if ha_device.is_following(str(indigo_variable.id)):
@@ -429,7 +432,8 @@ class Plugin(indigo.PluginBase):
             headers = self.config.hass_session_headers
             headers['Content-Type'] = 'application/json'
             resp = requests.request('GET', url,
-                verify=self.config.hass_ssl_validate, headers=headers)
+                                    verify=self.config.hass_ssl_validate,
+                                    headers=headers)
             if resp.status_code is not requests.codes['OK']:
                 self.logger.warn(
                     u'Unable to get mapping of indigo devices to home assitant entities, recieved {}'
@@ -441,10 +445,10 @@ class Plugin(indigo.PluginBase):
                     u'attributes']:
                     self._ha_devices[str(
                         ha_entity[u'attributes'][u'indigo_id'])].ha_entity_id = \
-                    ha_entity[u'entity_id']
+                        ha_entity[u'entity_id']
                     self._ha_devices[str(ha_entity[u'attributes'][
-                        u'indigo_id'])].ha_friendly_name = \
-                    ha_entity[u'attributes'][u'friendly_name']
+                                             u'indigo_id'])].ha_friendly_name = \
+                        ha_entity[u'attributes'][u'friendly_name']
 
         except Exception as e:
             t, v, tb = sys.exc_info()
@@ -471,7 +475,8 @@ class DeviceGeneratorFactory(object):
         InsteonKeypadTypesGenerator,
         InsteonInputOutputTypesGenerator,
         InsteonRemoteTypesGenerator,
-        InsteonBatteryPoweredSensorsTypeGenerator
+        InsteonBatteryPoweredSensorsTypeGenerator,
+        ZWaveDefaultTypesGenerator
     ]
 
     @staticmethod

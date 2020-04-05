@@ -14,8 +14,7 @@ as Sensors in Home Assistant.
 
 ## Features
 
-**Currently only Insteon devices are supported**
-
+* Home Assistant Auto Discovery of published Indigo devices
 * Bi Directional control of Indigo connected devices
 * Expose keypad and remote button presses as Home Assistant Events and Device Actions.
 * Expose Indigo Variables as Home Assistant Sensors
