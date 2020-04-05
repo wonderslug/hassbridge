@@ -57,8 +57,11 @@ class InsteonDefaultTypesGenerator(object):
 
     @staticmethod
     def generate(dev, config, logger):
+
         devices = {}
         overrides = {}
+        if u'insteon' != str(dev.protocol).lower():
+            return devices
         bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev, logger)
         if 'devices' in config.customizations and dev.name in config.customizations['devices']:
             overrides = config.customizations['devices'][dev.name]
