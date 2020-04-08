@@ -464,7 +464,7 @@ class Plugin(indigo.PluginBase):
 
     def _register_ha_devices(self):
         for ha_dev_id, ha_dev in self._ha_devices.iteritems():
-            if ha_dev.id in indigo.devices and isinstance(ha_dev, RegisterableDevice):
+            if ha_dev.indigo_entity.id in indigo.devices and isinstance(ha_dev, RegisterableDevice):
                 ha_dev.register()
 
 

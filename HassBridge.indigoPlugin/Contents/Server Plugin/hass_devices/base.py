@@ -229,6 +229,7 @@ class BaseAvailableHAEntity(BaseHAEntity):
         # TODO setup config for track availability and if to maintain
         __main__.get_mqtt_client().will_set(topic=self.availability_topic,
             payload=self.payload_not_available)
+        self.logger.debug("Sending availability of {} for {} to {}".format(self.payload_available, self.name, self.availability_topic))
         __main__.get_mqtt_client().publish(topic=self.availability_topic,
             payload=self.payload_available,
             qos=self.availability_topic_qos,
