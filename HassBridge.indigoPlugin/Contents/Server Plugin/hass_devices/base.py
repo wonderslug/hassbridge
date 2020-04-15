@@ -23,14 +23,13 @@
 import json
 import re
 
+import __main__
 import indigo
 import pytz
 import tzlocal
 from hassbridge import (
     MQTT_UNIQUE_ID_TEMPLATE, RegisterableDevice, TOPIC_ROOT, UpdatableDevice,
-     str2bool)
-
-import __main__
+    str2bool)
 
 
 class Base(object):
@@ -58,16 +57,16 @@ class Base(object):
     def _overrideable_get(self, key, default, section=CONFIG_VARS_SECTION):
         ret = None
         if default is not None:
-            ret = str(default).format(d=self)
+            ret = unicode(default).format(d=self)
 
         if section is self.MAIN_CONFIG_SECTION \
                 and key in self.overrides \
                 and self.overrides[key]:
-            ret = str(self.overrides[key]).format(d=self)
+            ret = unicode(self.overrides[key]).format(d=self)
         elif section in self.overrides \
                 and key in self.overrides[section] \
                 and self.overrides[section][key]:
-            ret = str(self.overrides[section][key]).format(d=self)
+            ret = unicode(self.overrides[section][key]).format(d=self)
         return ret
 
     @property
@@ -77,7 +76,7 @@ class Base(object):
     @property
     def name(self):
         return self._overrideable_get(self.CONFIG_NAME,
-            self.indigo_entity.name).format(d=self)
+                                      self.indigo_entity.name).format(d=self)
 
 
 class BaseHAEntity(Base, RegisterableDevice):

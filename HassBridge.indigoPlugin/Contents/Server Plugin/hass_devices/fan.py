@@ -100,7 +100,7 @@ class Fan(BaseCommandableHADevice):
 
     def __send_speed_state(self, dev):
         __main__.get_mqtt_client().publish(topic=self.speed_state_topic,
-            payload=str(self.index_to_name[dev.speedIndex]),
+            payload=unicode(self.index_to_name[dev.speedIndex]),
             retain=self.speed_state_topic_retain)
 
     def cleanup(self):

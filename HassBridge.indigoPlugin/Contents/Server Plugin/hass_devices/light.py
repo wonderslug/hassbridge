@@ -126,7 +126,7 @@ class Light(BaseCommandableHADevice):
                           .format(dev.brightness,
                                   self.brightness_state_topic))
         __main__.get_mqtt_client().publish(topic=self.brightness_state_topic,
-                                 payload=str(dev.brightness),
+                                 payload=unicode(dev.brightness),
                                  retain=self.brightness_command_topic_retain)
 
     def cleanup(self):
