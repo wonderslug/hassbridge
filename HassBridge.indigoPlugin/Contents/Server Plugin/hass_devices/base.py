@@ -127,43 +127,48 @@ class BaseHAEntity(Base, RegisterableDevice):
     @property
     def unique_id(self):
         return self._overrideable_get(self.CONFIG_UNIQUE_ID,
-            MQTT_UNIQUE_ID_TEMPLATE).format(d=self)
+                                      MQTT_UNIQUE_ID_TEMPLATE).format(d=self)
 
     @property
     def qos(self):
-        return int(self._overrideable_get(self.CONFIG_QOS,
+        return int(self._overrideable_get(
+            self.CONFIG_QOS,
             self.DEFAULT_CONFIG_TOPIC_QOS).format(d=self))
 
     @property
     def config_topic(self):
         return self._overrideable_get(self.CONFIG_TOPIC_KEY,
-            self.DEFAULT_CONFIG_TOPIC).format(d=self)
+                                      self.DEFAULT_CONFIG_TOPIC).format(d=self)
 
     @property
     def config_topic_qos(self):
         return int(self._overrideable_get(self.CONFIG_TOPIC_QOS_KEY,
-            self.DEFAULT_CONFIG_TOPIC_QOS))
+                                          self.DEFAULT_CONFIG_TOPIC_QOS))
 
     @property
     def config_topic_retain(self):
         return bool(self._overrideable_get(self.CONFIG_TOPIC_RETAIN_KEY,
-            self.DEFAULT_CONFIG_TOPIC_RETAIN))
+                                           self.DEFAULT_CONFIG_TOPIC_RETAIN))
 
     def register(self):
         # TODO setup config for maintain device/config
         self.logger.debug(
-            "Sending config for {d[name]}:{d[id]} to topic {d[config_topic]}".format(
+            unicode("Sending config for {d[name]}:{d[id]} to topic "
+                    "{d[config_topic]}").format(
                 d=self))
-        __main__.get_mqtt_client().publish(topic=self.config_topic,
+        __main__.get_mqtt_client().publish(
+            topic=self.config_topic,
             payload=json.dumps(self.config),
             qos=self.config_topic_qos,
             retain=self.config_topic_retain)
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up config mqtt topics for device {d[name]}:{d[id]} on topic {d[config_topic]}".format(
+            unicode("Cleaning up config mqtt topics for device "
+                    "{d[name]}:{d[id]} on topic {d[config_topic]}").format(
                 d=self))
-        __main__.get_mqtt_client().publish(topic=self.config_topic,
+        __main__.get_mqtt_client().publish(
+            topic=self.config_topic,
             payload='',
             qos=self.config_topic_qos,
             retain=self.config_topic_retain)
@@ -226,19 +231,26 @@ class BaseAvailableHAEntity(BaseHAEntity):
     def register(self):
         super(BaseAvailableHAEntity, self).register()
         # TODO setup config for track availability and if to maintain
-        __main__.get_mqtt_client().will_set(topic=self.availability_topic,
+        __main__.get_mqtt_client().will_set(
+            topic=self.availability_topic,
             payload=self.payload_not_available)
-        self.logger.debug("Sending availability of {} for {} to {}".format(self.payload_available, self.name, self.availability_topic))
-        __main__.get_mqtt_client().publish(topic=self.availability_topic,
+        self.logger.debug(unicode("Sending availability of {} for {} to {}")
+                          .format(self.payload_available,
+                                  self.name,
+                                  self.availability_topic))
+        __main__.get_mqtt_client().publish(
+            topic=self.availability_topic,
             payload=self.payload_available,
             qos=self.availability_topic_qos,
             retain=self.availability_topic_retain)
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up availability mqtt topics for device {d[name]}:{d[id]} on topic {d[availability_topic]}".format(
-                d=self))
-        __main__.get_mqtt_client().publish(topic=self.availability_topic,
+            unicode("Cleaning up availability mqtt topics for device "
+                    "{d[name]}:{d[id]} on topic {d[availability_topic]}")
+                .format(d=self))
+        __main__.get_mqtt_client().publish(
+            topic=self.availability_topic,
             payload='',
             qos=self.availability_topic_qos,
             retain=self.availability_topic_retain)
@@ -270,7 +282,8 @@ class BaseAvailableHAEntity(BaseHAEntity):
             self.DEFAULT_PAYLOAD_NOT_AVAILABLE).format(d=self)
 
     def shutdown(self):
-        __main__.get_mqtt_client().publish(topic=self.availability_topic,
+        __main__.get_mqtt_client().publish(
+            topic=self.availability_topic,
             payload=self.payload_not_available,
             qos=self.availability_topic_qos,
             retain=self.availability_topic_retain)
@@ -286,7 +299,7 @@ class BaseStatefulHAEntity(BaseAvailableHAEntity):
             logger, discovery_prefix)
         self.config.update({
             self.STATE_TOPIC_KEY: self._overrideable_get(self.STATE_TOPIC_KEY,
-                self.state_topic)
+                                                         self.state_topic)
         })
 
     STATE_TOPIC_KEY = "state_topic"
@@ -315,12 +328,13 @@ class BaseStatefulHAEntity(BaseAvailableHAEntity):
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up state mqtt topics for device {d[name]}:{d[id]} on topic {d[state_topic]}".format(
-                d=self))
+            unicode("Cleaning up state mqtt topics for device {d[name]}:{d[id]}"
+                    " on topic {d[state_topic]}")
+                .format(d=self))
         __main__.get_mqtt_client().publish(topic=self.state_topic,
-            payload='',
-            qos=self.state_topic_qos,
-            retain=self.state_topic_retain)
+                                           payload='',
+                                           qos=self.state_topic_qos,
+                                           retain=self.state_topic_retain)
         super(BaseStatefulHAEntity, self).cleanup()
 
 
@@ -339,7 +353,7 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
             self.JSON_ATTRIBUTES_TOPIC_KEY: self.json_attribute_topic,
             'device': {
                 'identifiers': [indigo_entity.address, indigo_entity.id],
-                'manufacturer': '{} via Indigo MQTT Bridge'.format(
+                'manufacturer': unicode('{} via Indigo MQTT Bridge').format(
                     indigo_entity.protocol),
                 'model': indigo_entity.model,
                 'name': indigo_entity.name
@@ -352,7 +366,7 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
     @property
     def payload_on(self):
         return self._overrideable_get(self.PAYLOAD_ON_KEY,
-            self.DEFAULT_PAYLOAD_ON).format(d=self)
+                                      self.DEFAULT_PAYLOAD_ON).format(d=self)
 
     PAYLOAD_OFF_KEY = "payload_off"
     DEFAULT_PAYLOAD_OFF = "OFF"
@@ -360,7 +374,7 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
     @property
     def payload_off(self):
         return self._overrideable_get(self.PAYLOAD_OFF_KEY,
-            self.DEFAULT_PAYLOAD_OFF).format(d=self)
+                                      self.DEFAULT_PAYLOAD_OFF).format(d=self)
 
     JSON_ATTRIBUTES_TOPIC_KEY = 'json_attributes_topic'
     JSON_ATTRIBUTES_TOPIC_TEMPLATE = TOPIC_ROOT + "/attributes"
@@ -398,7 +412,8 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
 
     def _send_state(self, dev):
         state = self.payload_on if dev.onState else self.payload_off
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
+        __main__.get_mqtt_client().publish(
+            topic=self.state_topic,
             payload=state,
             qos=self.state_topic_qos,
             retain=self.state_topic_retain)
@@ -414,16 +429,19 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
             'indigo_id': self.id,
         }
 
-        __main__.get_mqtt_client().publish(topic=self.json_attribute_topic,
+        __main__.get_mqtt_client().publish(
+            topic=self.json_attribute_topic,
             payload=json.dumps(attributes),
             qos=self.json_attribute_topic_qos,
             retain=self.json_attribute_topic_retain)
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up json_attribute_topic mqtt topics for device {d[name]}:{d[id]} on topic {d[json_attribute_topic]}".format(
-                d=self))
-        __main__.get_mqtt_client().publish(topic=self.json_attribute_topic,
+            unicode("Cleaning up json_attribute_topic mqtt topics for device "
+                    "{d[name]}:{d[id]} on topic {d[json_attribute_topic]}")
+                .format(d=self))
+        __main__.get_mqtt_client().publish(
+            topic=self.json_attribute_topic,
             payload='',
             qos=self.json_attribute_topic_qos,
             retain=False)
@@ -461,7 +479,8 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
     def register(self):
         super(BaseCommandableHADevice, self).register()
         # register command topic
-        self.logger.debug("Subscribing {} with id {}:{} to command topic {}"
+        self.logger.debug(
+            unicode("Subscribing {} with id {}:{} to command topic {}")
             .format(self.hass_type, self.name, self.id, self.command_topic))
         __main__.get_mqtt_client().subscribe(self.command_topic)
         __main__.get_mqtt_client().message_callback_add(self.command_topic,
@@ -469,20 +488,22 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
 
     def on_command_message(self, client, userdata, msg):
         self.logger.debug(
-            "Command message {} recieved on {}".format(msg.payload, msg.topic))
-        if msg.payload == self.payload_on and not indigo.devices[
-            self.id].onState:
+            unicode("Command message {} recieved on {}").format(msg.payload,
+                                                                msg.topic))
+        if msg.payload == self.payload_on and \
+                not indigo.devices[self.id].onState:
             indigo.device.turnOn(self.id)
-        elif msg.payload == self.payload_off and indigo.devices[
-            self.id].onState:
+        elif msg.payload == self.payload_off and \
+                indigo.devices[self.id].onState:
             indigo.device.turnOff(self.id)
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up command_topic mqtt topics for device "
-            "{d[name]}:{d[id]} on topic {d[command_topic]}".format(
-                d=self))
-        __main__.get_mqtt_client().publish(topic=self.command_topic,
+            unicode(
+                "Cleaning up command_topic mqtt topics for device "
+                "{d[name]}:{d[id]} on topic {d[command_topic]}").format(d=self))
+        __main__.get_mqtt_client().publish(
+            topic=self.command_topic,
             payload='',
             retain=False)
         super(BaseCommandableHADevice, self).cleanup()
