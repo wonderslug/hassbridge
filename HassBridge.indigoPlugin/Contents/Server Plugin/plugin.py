@@ -52,7 +52,9 @@ from insteon import (
     InsteonInputOutputTypesGenerator, InsteonRemoteTypesGenerator,
     InsteonBatteryPoweredSensorsTypeGenerator)
 from variables import VariableDefaultTypesGenerator
-from zwave import ZWaveDefaultTypesGenerator
+from zwave import (
+    ZWaveDefaultTypesGenerator,
+    ZWaveBatteryPoweredSensorsTypeGenerator)
 
 pVer = 0
 
@@ -141,7 +143,7 @@ class Plugin(indigo.PluginBase):
             self.update_perfs(values_dict)
 
     def runConcurrentThread(self):
-        self.logger.debug("Starting Concurrent Thread")
+        self.logger.debug(u"Starting Concurrent Thread")
         while True:
             if self._started:
                 if not self.mqtt_connected:
@@ -209,12 +211,12 @@ class Plugin(indigo.PluginBase):
     def _connect_to_mqtt_broker(self):
         try:
             self._disconnect_from_mqtt_broker()
-            self.logger.info("Connecting to the MQTT Server...")
+            self.logger.info(u"Connecting to the MQTT Server...")
             self.mqtt_client.username_pw_set(username=self.config.mqtt_username,
                                              password=self.config.mqtt_password)
             self.mqtt_client.connect(self.config.mqtt_server,
                                      self.config.mqtt_port, 59)
-            self.logger.info("Connected to MQTT Server!")
+            self.logger.info(u"Connected to MQTT Server!")
             self.mqtt_client.loop_start()
         except Exception:
             t, v, tb = sys.exc_info()
@@ -475,7 +477,8 @@ class DeviceGeneratorFactory(object):
         InsteonInputOutputTypesGenerator,
         InsteonRemoteTypesGenerator,
         InsteonBatteryPoweredSensorsTypeGenerator,
-        ZWaveDefaultTypesGenerator
+        ZWaveDefaultTypesGenerator,
+        ZWaveBatteryPoweredSensorsTypeGenerator
     ]
 
     @staticmethod

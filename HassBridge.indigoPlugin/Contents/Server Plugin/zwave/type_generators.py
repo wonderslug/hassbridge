@@ -24,7 +24,7 @@ import indigo
 
 from .devices import (
     ZWaveBinarySensor, ZWaveFan, ZWaveLight, ZWaveSensor,
-    ZWaveSwitch)
+    ZWaveSwitch, ZWaveBatteryStateSensor)
 
 
 class ZWaveDefaultTypesGenerator(object):
@@ -80,3 +80,17 @@ class ZWaveDefaultTypesGenerator(object):
         elif type(dev) is indigo.SpeedControlDevice:
             bridge_type = ZWaveFan.__name__
         return bridge_type
+
+
+class ZWaveBatteryPoweredSensorsTypeGenerator(object):
+    @staticmethod
+    def generate(dev, config, logger):
+        devices = {}
+        if config.create_battery_sensors and dev.batteryLevel is not None:
+            device = ZWaveBatteryStateSensor(dev, config.customizations, logger, config.hass_discovery_prefix)
+            devices[device.id] = device
+        return devices
+
+    @staticmethod
+    def is_bridgeable(dev, logger):
+        return False

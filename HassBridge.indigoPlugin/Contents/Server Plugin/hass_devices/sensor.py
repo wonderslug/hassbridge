@@ -20,8 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from hassbridge import str2bool
 import __main__
+from hassbridge import str2bool
 
 from .base import BaseStatefulHADevice
 
@@ -29,34 +29,54 @@ from .base import BaseStatefulHADevice
 class Sensor(BaseStatefulHADevice):
 
     def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(Sensor, self).__init__(indigo_entity, overrides, logger, discovery_prefix)
+        super(Sensor, self).__init__(indigo_entity,
+                                     overrides,
+                                     logger,
+                                     discovery_prefix)
         self.config.update({
             self.EXPIRE_AFTER_KEY: self.expire_after,
             self.FORCE_UPDATE_KEY: self.force_update
         })
-        if self.unit_of_measurement is not None:
-            self.config.update({self.UNIT_OF_MEASUREMENT_KEY: self.unit_of_measurement})
+        self.config.update({
+            self.UNIT_OF_MEASUREMENT_KEY: self.unit_of_measurement})
+        self.config.update({self.DEVICE_CLASS_KEY: self.device_class})
+        del self.config[self.PAYLOAD_ON_KEY]
+        del self.config[self.PAYLOAD_OFF_KEY]
 
     @property
     def hass_type(self):
         return "sensor"
 
+    DEVICE_CLASS_KEY = "device_class"
+    DEFAULT_DEVICE_CLASS = None
+
+    @property
+    def device_class(self):
+        ret = self._overrideable_get(self.DEVICE_CLASS_KEY,
+                                     self.DEFAULT_DEVICE_CLASS)
+        return ret.format(d=self) if ret is not None else ret
+
     def _send_state(self, dev):
-        __main__.get_mqtt_client().publish(topic=self.state_topic, payload=dev.sensorValue, retain=self.state_topic_retain)
+        __main__.get_mqtt_client().publish(topic=self.state_topic,
+                                           payload=dev.sensorValue,
+                                           retain=self.state_topic_retain)
 
     EXPIRE_AFTER_KEY = "expire_after"
     DEFAULT_EXPIRE_AFTER = 0
 
     @property
     def expire_after(self):
-        return int(self._overrideable_get(self.EXPIRE_AFTER_KEY, self.DEFAULT_EXPIRE_AFTER).format(d=self))
+        return int(self._overrideable_get(
+            self.EXPIRE_AFTER_KEY,
+            self.DEFAULT_EXPIRE_AFTER).format(d=self))
 
     FORCE_UPDATE_KEY = "force_update"
     DEFAULT_FORCE_UPDATE = False
 
     @property
     def force_update(self):
-        retval = self._overrideable_get(self.FORCE_UPDATE_KEY, self.DEFAULT_FORCE_UPDATE)
+        retval = self._overrideable_get(self.FORCE_UPDATE_KEY,
+                                        self.DEFAULT_FORCE_UPDATE)
         return str2bool(retval.format(d=self))
 
     UNIT_OF_MEASUREMENT_KEY = "unit_of_measurement"
@@ -64,5 +84,6 @@ class Sensor(BaseStatefulHADevice):
 
     @property
     def unit_of_measurement(self):
-        ret = self._overrideable_get(self.UNIT_OF_MEASUREMENT_KEY, self.DEFAULT_UNIT_OF_MEASUREMENT)
+        ret = self._overrideable_get(self.UNIT_OF_MEASUREMENT_KEY,
+                                     self.DEFAULT_UNIT_OF_MEASUREMENT)
         return ret.format(d=self) if ret is not None else ret
