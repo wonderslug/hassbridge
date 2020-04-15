@@ -20,11 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from .type_generators import (
-    ZWaveBatteryPoweredSensorsTypeGenerator,
-    ZWaveDefaultTypesGenerator)
+from .type_generators import VirtualDefaultTypesGenerator
 
 __all__ = [
-    'ZWaveDefaultTypesGenerator',
-    'ZWaveBatteryPoweredSensorsTypeGenerator'
+    'VirtualDefaultTypesGenerator'
 ]

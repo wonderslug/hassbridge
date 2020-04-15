@@ -20,11 +20,10 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from .type_generators import (
-    ZWaveBatteryPoweredSensorsTypeGenerator,
-    ZWaveDefaultTypesGenerator)
+from hass_devices import Switch
 
-__all__ = [
-    'ZWaveDefaultTypesGenerator',
-    'ZWaveBatteryPoweredSensorsTypeGenerator'
-]
+
+class VirtualSwitch(Switch):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(VirtualSwitch, self).__init__(indigo_entity,
+                                            overrides, logger, discovery_prefix)

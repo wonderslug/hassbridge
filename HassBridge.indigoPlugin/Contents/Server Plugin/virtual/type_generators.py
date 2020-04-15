@@ -22,22 +22,25 @@
 
 import indigo
 
-from .devices import (
-    ZWaveBinarySensor, ZWaveFan, ZWaveLight, ZWaveSensor,
-    ZWaveSwitch, ZWaveBatteryStateSensor)
+from .devices import VirtualSwitch
+
+VIRTUAL_DEVICES_PLUGIN = \
+    u'com.perceptiveautomation.indigoplugin.devicecollection'
+VIRTUAL_DEVICES_PROTOCOL = u'plugin'
 
 
-class ZWaveDefaultTypesGenerator(object):
+class VirtualDefaultTypesGenerator(object):
 
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
         overrides = {}
 
-        if u'zwave' != str(dev.protocol).lower():
+        if str(dev.protocol).lower() != VIRTUAL_DEVICES_PROTOCOL \
+                and str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
             return devices
 
-        bridge_type = ZWaveDefaultTypesGenerator._evaluate_device_type(
+        bridge_type = VirtualDefaultTypesGenerator._evaluate_device_type(
             dev,
             logger)
         if 'devices' in config.customizations and dev.name in \
@@ -59,38 +62,17 @@ class ZWaveDefaultTypesGenerator(object):
 
     @staticmethod
     def is_bridgeable(dev, logger):
-        if u'zwave' != str(dev.protocol).lower():
+        if str(dev.protocol).lower() != VIRTUAL_DEVICES_PROTOCOL \
+                and str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
             return False
-        return True if ZWaveDefaultTypesGenerator._evaluate_device_type(
+
+        return True if VirtualDefaultTypesGenerator._evaluate_device_type(
             dev,
             logger) is not None else False
 
     @staticmethod
     def _evaluate_device_type(dev, logger):
         bridge_type = None
-        if type(dev) is indigo.SensorDevice:
-            if not dev.supportsSensorValue:
-                bridge_type = ZWaveBinarySensor.__name__
-            else:
-                bridge_type = ZWaveSensor.__name__
-        elif type(dev) is indigo.RelayDevice:
-            bridge_type = ZWaveSwitch.__name__
-        elif type(dev) is indigo.DimmerDevice:
-            bridge_type = ZWaveLight.__name__
-        elif type(dev) is indigo.SpeedControlDevice:
-            bridge_type = ZWaveFan.__name__
+        if type(dev) is indigo.RelayDevice:
+            bridge_type = VirtualSwitch.__name__
         return bridge_type
-
-
-class ZWaveBatteryPoweredSensorsTypeGenerator(object):
-    @staticmethod
-    def generate(dev, config, logger):
-        devices = {}
-        if config.create_battery_sensors and dev.batteryLevel is not None:
-            device = ZWaveBatteryStateSensor(dev, config.customizations, logger, config.hass_discovery_prefix)
-            devices[device.id] = device
-        return devices
-
-    @staticmethod
-    def is_bridgeable(dev, logger):
-        return False

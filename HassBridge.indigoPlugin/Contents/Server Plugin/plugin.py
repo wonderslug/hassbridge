@@ -10,8 +10,8 @@
 #  copies of the Software, and to permit persons to whom the Software is
 #  furnished to do so, subject to the following conditions:
 #
-#  The above copyright notice and this permission notice shall be included in all
-#  copies or substantial portions of the Software.
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
 #
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -52,9 +52,11 @@ from insteon import (
     InsteonInputOutputTypesGenerator, InsteonRemoteTypesGenerator,
     InsteonBatteryPoweredSensorsTypeGenerator)
 from variables import VariableDefaultTypesGenerator
+from virtual import VirtualDefaultTypesGenerator
 from zwave import (
     ZWaveDefaultTypesGenerator,
     ZWaveBatteryPoweredSensorsTypeGenerator)
+
 
 pVer = 0
 
@@ -257,7 +259,8 @@ class Plugin(indigo.PluginBase):
         if self.mqtt_connected:
             self.logger.debug(u"Disconnecting from MQTT Broker")
             for ha_device_id, ha_device in self._ha_devices.iteritems():
-                if isinstance(ha_device, RegisterableDevice):
+                if ha_device.indigo_entity is not None \
+                        and isinstance(ha_device, RegisterableDevice):
                     ha_device.shutdown()
             self.mqtt_client.disconnect()
             self.mqtt_client.loop_stop()
@@ -443,8 +446,9 @@ class Plugin(indigo.PluginBase):
 
             ha_entities = resp.json()
             for ha_entity in ha_entities:
-                if u'attributes' in ha_entity and u'indigo_id' in ha_entity[
-                    u'attributes'] and str(ha_entity[u'attributes'][u'indigo_id']) in self._ha_devices:
+                if u'attributes' in ha_entity \
+                        and u'indigo_id' in ha_entity[u'attributes'] \
+                        and str(ha_entity[u'attributes'][u'indigo_id']) in self._ha_devices:
                     self._ha_devices[str(ha_entity[u'attributes'][u'indigo_id'])].ha_entity_id = \
                     ha_entity[u'entity_id']
                     self._ha_devices[str(ha_entity[u'attributes'][
@@ -457,16 +461,20 @@ class Plugin(indigo.PluginBase):
             raise
 
     def _register_ha_device(self, ha_device):
-        if isinstance(ha_device, RegisterableDevice):
+        if ha_device.indigo_entity is not None \
+                and isinstance(ha_device, RegisterableDevice):
             ha_device.register()
 
     def _unregister_ha_device(self, ha_device):
-        if isinstance(ha_device, RegisterableDevice):
+        if ha_device.indigo_entity is not None \
+                and isinstance(ha_device, RegisterableDevice):
             ha_device.cleanup()
 
     def _register_ha_devices(self):
         for ha_dev_id, ha_dev in self._ha_devices.iteritems():
-            if ha_dev.indigo_entity.id in indigo.devices and isinstance(ha_dev, RegisterableDevice):
+            if ha_dev.indigo_entity is not None \
+                    and ha_dev.indigo_entity.id in indigo.devices \
+                    and isinstance(ha_dev, RegisterableDevice):
                 ha_dev.register()
 
 
@@ -478,7 +486,8 @@ class DeviceGeneratorFactory(object):
         InsteonRemoteTypesGenerator,
         InsteonBatteryPoweredSensorsTypeGenerator,
         ZWaveDefaultTypesGenerator,
-        ZWaveBatteryPoweredSensorsTypeGenerator
+        ZWaveBatteryPoweredSensorsTypeGenerator,
+        VirtualDefaultTypesGenerator
     ]
 
     @staticmethod
