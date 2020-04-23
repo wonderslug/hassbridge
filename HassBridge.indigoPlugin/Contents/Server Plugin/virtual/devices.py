@@ -20,10 +20,22 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from hass_devices import Switch
+from hass_devices import Light, Switch, BinarySensor
 
 
 class VirtualSwitch(Switch):
     def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
         super(VirtualSwitch, self).__init__(indigo_entity,
                                             overrides, logger, discovery_prefix)
+
+
+class VirtualLight(Light):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(VirtualLight, self).__init__(indigo_entity,
+                                           overrides, logger, discovery_prefix)
+
+
+class VirtualBinarySensor(BinarySensor):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(VirtualBinarySensor, self).__init__(indigo_entity, overrides,
+                                                  logger, discovery_prefix)
