@@ -21,8 +21,9 @@
 #  SOFTWARE.
 
 import indigo
+import json
 
-from .devices import VirtualSwitch
+from .devices import VirtualSwitch, VirtualLight, VirtualBinarySensor
 
 VIRTUAL_DEVICES_PLUGIN = \
     u'com.perceptiveautomation.indigoplugin.devicecollection'
@@ -63,7 +64,7 @@ class VirtualDefaultTypesGenerator(object):
     @staticmethod
     def is_bridgeable(dev, logger):
         if str(dev.protocol).lower() != VIRTUAL_DEVICES_PROTOCOL \
-                and str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
+                or str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
             return False
 
         return True if VirtualDefaultTypesGenerator._evaluate_device_type(
@@ -74,5 +75,11 @@ class VirtualDefaultTypesGenerator(object):
     def _evaluate_device_type(dev, logger):
         bridge_type = None
         if type(dev) is indigo.RelayDevice:
-            bridge_type = VirtualSwitch.__name__
+            if dev.model == u'Device Group':
+                device_list = json.loads(dev.ownerProps['deviceListDict'])
+                if len(device_list['relays']) == 0 \
+                        and len(device_list['dimmers']) == 0:
+                    bridge_type = VirtualBinarySensor.__name__
+                else:
+                    bridge_type = VirtualSwitch.__name__
         return bridge_type

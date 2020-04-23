@@ -392,8 +392,7 @@ class Plugin(indigo.PluginBase):
 
                     # Get the ha devices for each indigo variable
                     hass_devices = VariableGeneratorFactory.generate(
-                        indigo_variable, self.config, self.mqtt_client,
-                        self.logger)
+                        indigo_variable, self.config, self.logger)
 
                     # Go through HA devices
                     for ha_device_id, ha_device in hass_devices.iteritems():
