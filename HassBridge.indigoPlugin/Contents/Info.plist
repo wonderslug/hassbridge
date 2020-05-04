@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>PluginVersion</key>
-	<string>0.4.1</string>
+	<string>1.0.0</string>
 	<key>ServerApiVersion</key>
 	<string>1.0.0</string>
 	<key>IwsApiVersion</key>
@@ -20,7 +20,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>https://github.com/wonderslug/indigo-hassbridge/</string>
+			<string>https://github.com/wonderslug/hassbridge/</string>
 		</dict>
 	</array>
 </dict>

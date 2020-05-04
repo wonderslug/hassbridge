@@ -66,6 +66,10 @@ plugin_instance = None
 
 
 class Plugin(indigo.PluginBase):
+    # def pluginstoreUpdate(self):
+    #     iurl = 'http://www.indigodomo.com/pluginstore/139/'
+    #     self.browserOpen(iurl)
+
     ########################################
     # Main Functions
     ######################

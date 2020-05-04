@@ -23,12 +23,14 @@
 import indigo
 
 from .command_processors import INSTEON_EVENTS
-from .devices import InsteonKeypadButtonLight, \
-    InsteonBinarySensor, InsteonFan, InsteonSwitch, \
-    InsteonSensor, InsteonLight, InsteonCover, InsteonRemote, \
-    InsteonBatteryStateSensor, InsteonButtonActivityTracker
+from .devices import (
+    InsteonBatteryStateSensor, InsteonBinarySensor,
+    InsteonButtonActivityTracker, InsteonCover, InsteonFan,
+    InsteonKeypadButtonLight, InsteonLight, InsteonRemote, InsteonSensor,
+    InsteonSwitch)
 
-INSTEON_KEYPAD_8_BUTTON_MAP = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H'}
+INSTEON_KEYPAD_8_BUTTON_MAP = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G',
+                               8: 'H'}
 INSTEON_KEYPAD_6_BUTTON_MAP = {3: 'A', 4: 'B', 5: 'C', 6: 'D'}
 
 INSTEON_KEYPAD_MODELS = {
@@ -37,7 +39,8 @@ INSTEON_KEYPAD_MODELS = {
     u'KeypadLinc Relay': True,
 }
 
-INSTEON_8_BUTTON_REMOTE_MAP = {1: 'B', 2: 'A', 3: 'D', 4: 'C', 5: 'F', 6: 'E', 7: 'H', 8: 'G'}
+INSTEON_8_BUTTON_REMOTE_MAP = {1: 'B', 2: 'A', 3: 'D', 4: 'C', 5: 'F', 6: 'E',
+                               7: 'H', 8: 'G'}
 INSTEON_4_BUTTON_REMOTE_MAP = {1: 'A', 2: 'B', 3: 'C', 4: 'D'}
 INSTEON_1_BUTTON_REMOTE_MAP = {1: None}
 
@@ -62,31 +65,43 @@ class InsteonDefaultTypesGenerator(object):
         overrides = {}
         if u'insteon' != str(dev.protocol).lower():
             return devices
-        bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev, logger)
-        if 'devices' in config.customizations and dev.name in config.customizations['devices']:
+        bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev,
+                                                                         logger)
+        if 'devices' in config.customizations and dev.name in \
+                config.customizations['devices']:
             overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
-            overrides = InsteonDefaultTypesGenerator._define_likley_device_class(dev, overrides)
-            hass_dev = globals()[bridge_type](dev, overrides, logger, config.hass_discovery_prefix)
+            overrides = InsteonDefaultTypesGenerator._define_likley_device_class(
+                dev, overrides)
+            hass_dev = globals()[bridge_type](dev, overrides, logger,
+                                              config.hass_discovery_prefix)
             devices[str(dev.id)] = hass_dev
         return devices
 
     @staticmethod
     def _define_likley_device_class(indigo_device, overrides):
-        if 'config_vars' not in overrides or 'device_class' not in overrides['config_vars']:
+        if 'config_vars' not in overrides or 'device_class' not in overrides[
+            'config_vars']:
             if str(indigo_device.model) == u'Leak Sensor':
-                InsteonDefaultTypesGenerator._add_config_vars_device_class(overrides, HA_DEVICE_CLASS_MOISTURE)
+                InsteonDefaultTypesGenerator._add_config_vars_device_class(
+                    overrides, HA_DEVICE_CLASS_MOISTURE)
             elif str(indigo_device.model) == u'Door Sensor':
-                InsteonDefaultTypesGenerator._add_config_vars_device_class(overrides, HA_DEVICE_CLASS_DOOR)
+                InsteonDefaultTypesGenerator._add_config_vars_device_class(
+                    overrides, HA_DEVICE_CLASS_DOOR)
             elif str(indigo_device.model) == u'Open/Close Sensor':
                 if 'door' in indigo_device.name.lower():
-                    InsteonDefaultTypesGenerator._add_config_vars_device_class(overrides, HA_DEVICE_CLASS_DOOR)
+                    InsteonDefaultTypesGenerator._add_config_vars_device_class(
+                        overrides, HA_DEVICE_CLASS_DOOR)
                 elif 'window' in indigo_device.name.lower():
-                    InsteonDefaultTypesGenerator._add_config_vars_device_class(overrides, HA_DEVICE_CLASS_WINDOW)
-            elif str(indigo_device.model) == u'Motion Sensor (2844)' or 'motion' in indigo_device.name.lower():
-                InsteonDefaultTypesGenerator._add_config_vars_device_class(overrides, HA_DEVICE_CLASS_MOTION)
+                    InsteonDefaultTypesGenerator._add_config_vars_device_class(
+                        overrides, HA_DEVICE_CLASS_WINDOW)
+            elif str(
+                    indigo_device.model) == u'Motion Sensor (2844)' or \
+                    'motion' in indigo_device.name.lower():
+                InsteonDefaultTypesGenerator._add_config_vars_device_class(
+                    overrides, HA_DEVICE_CLASS_MOTION)
         return overrides
 
     @staticmethod
@@ -99,7 +114,9 @@ class InsteonDefaultTypesGenerator(object):
     def is_bridgeable(dev, logger):
         if u'insteon' != str(dev.protocol).lower():
             return False
-        return True if InsteonDefaultTypesGenerator._evaluate_device_type(dev, logger) is not None else False
+        return True if InsteonDefaultTypesGenerator._evaluate_device_type(
+            dev,
+            logger) is not None else False
 
     @staticmethod
     def _evaluate_device_type(dev, logger):
@@ -110,8 +127,6 @@ class InsteonDefaultTypesGenerator(object):
                 bridge_type = InsteonBinarySensor.__name__
             else:
                 bridge_type = InsteonSensor.__name__
-            # if str(dev.model) in ['Leak Sensor', 'Open/Close Sensor', 'Door Sensor', 'Motion Sensor (2844)']:
-            #     is_battery_powered = True
         elif type(dev) is indigo.RelayDevice:
             bridge_type = InsteonSwitch.__name__
         elif type(dev) is indigo.DimmerDevice:
@@ -134,20 +149,23 @@ class InsteonKeypadTypesGenerator(object):
                 button_map = INSTEON_KEYPAD_8_BUTTON_MAP
 
             for button_id, button_label in button_map.iteritems():
-                device = InsteonKeypadButtonLight(dev, config.customizations, logger,
-                                                  config.hass_discovery_prefix, button_id, button_label)
+                device = InsteonKeypadButtonLight(dev, config.customizations,
+                                                  logger,
+                                                  config.hass_discovery_prefix,
+                                                  button_id, button_label)
                 device.is_relay = INSTEON_KEYPAD_MODELS[dev.model]
                 devices[device.id] = device
 
                 # Setup the device activty trackers for the buttons
                 for event, activity_type in INSTEON_EVENTS.iteritems():
-                    button_activity_device = InsteonButtonActivityTracker(dev,
-                                                                          config.customizations,
-                                                                          logger,
-                                                                          config.hass_discovery_prefix,
-                                                                          button_id,
-                                                                          button_label,
-                                                                          activity_type)
+                    button_activity_device = InsteonButtonActivityTracker(
+                        dev,
+                        config.customizations,
+                        logger,
+                        config.hass_discovery_prefix,
+                        button_id,
+                        button_label,
+                        activity_type)
                     devices[button_activity_device.id] = button_activity_device
         return devices
 
@@ -162,19 +180,23 @@ class InsteonInputOutputTypesGenerator(InsteonDefaultTypesGenerator):
     def generate(dev, config, logger):
         devices = {}
         overrides = {}
-        bridge_type = InsteonInputOutputTypesGenerator._evaluate_device_type(dev, logger)
-        if 'devices' in config.customizations and dev.name in config.customizations['devices']:
+        bridge_type = InsteonInputOutputTypesGenerator._evaluate_device_type(
+            dev, logger)
+        if 'devices' in config.customizations and dev.name in \
+                config.customizations['devices']:
             overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
-            hass_dev = globals()[bridge_type](dev, overrides, logger, config.hass_discovery_prefix)
+            hass_dev = globals()[bridge_type](dev, overrides, logger,
+                                              config.hass_discovery_prefix)
             devices[str(dev.id)] = hass_dev
         return devices
 
     @staticmethod
     def is_bridgeable(dev, logger):
-        return True if InsteonInputOutputTypesGenerator._evaluate_device_type(dev, logger) is not None else False
+        return True if InsteonInputOutputTypesGenerator._evaluate_device_type(
+            dev, logger) is not None else False
 
     @staticmethod
     def _evaluate_device_type(dev, logger):
@@ -190,24 +212,27 @@ class InsteonRemoteTypesGenerator(object):
     def generate(dev, config, logger):
         devices = {}
         overrides = {}
-        if 'devices' in config.customizations and dev.name in config.customizations['devices']:
+        if 'devices' in config.customizations and dev.name in \
+                config.customizations['devices']:
             overrides = config.customizations['devices'][dev.name]
 
         if dev.model in INSTEON_REMOTE_MODELS:
             button_map = INSTEON_REMOTE_MODELS[dev.model]
             for button_id, button_label in button_map.iteritems():
-                device = InsteonRemote(dev, overrides, logger, button_id, button_label)
+                device = InsteonRemote(dev, overrides, logger, button_id,
+                                       button_label)
                 devices[device.id] = device
 
                 # Setup the device activty trackers for the buttons
                 for event, activity_type in INSTEON_EVENTS.iteritems():
-                    button_activity_device = InsteonButtonActivityTracker(dev,
-                                                                          config.customizations,
-                                                                          logger,
-                                                                          config.hass_discovery_prefix,
-                                                                          button_id,
-                                                                          button_label,
-                                                                          activity_type)
+                    button_activity_device = InsteonButtonActivityTracker(
+                        dev,
+                        config.customizations,
+                        logger,
+                        config.hass_discovery_prefix,
+                        button_id,
+                        button_label,
+                        activity_type)
                     devices[button_activity_device.id] = button_activity_device
         return devices
 
@@ -222,8 +247,18 @@ class InsteonBatteryPoweredSensorsTypeGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        if config.create_battery_sensors and str(dev.model) in ['Leak Sensor', 'Open/Close Sensor', 'Door Sensor', 'Motion Sensor (2844)']:
-            device = InsteonBatteryStateSensor(dev, config.customizations, logger, config.hass_discovery_prefix)
+        if config.create_battery_sensors and \
+                str(dev.model) in ['Leak Sensor',
+                                   'Open/Close Sensor',
+                                   'Door Sensor',
+                                   'Motion Sensor (2844)']:
+            device = InsteonBatteryStateSensor(
+                dev,
+                config.customizations,
+                logger,
+                config.hass_discovery_prefix,
+                config.insteon_no_comm_minutes
+            )
             devices[device.id] = device
         return devices
 

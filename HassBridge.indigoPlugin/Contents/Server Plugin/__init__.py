@@ -94,6 +94,9 @@ class Config(object):
         self.create_battery_sensors = pluginPrefs.get(u"create_battery_sensors",
             False)
 
+        self.insteon_no_comm_minutes = int(pluginPrefs.get(
+            u"insteon_battery_minutes_no_com", 1440))
+
         if self.use_customize_file:
             self.customizations = self.__read_customization_file()
 
