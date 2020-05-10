@@ -101,10 +101,16 @@ class Config(object):
             self.customizations = self.__read_customization_file()
 
     def __read_customization_file(self):
+        customizations = {}
         try:
+
             if os.path.isfile(self.customize_file_path):
                 stream = file(self.customize_file_path, 'r')
-                return yaml.full_load(stream)
+                customizations =  yaml.full_load(stream)
+            else:
+                self.logger.error("Unable to find customization file {}"
+                                 .format(self.customize_file_path))
+            return customizations
         except Exception:
             t, v, tb = sys.exc_info()
             self.__handle_exception(t, v, tb)
@@ -112,6 +118,14 @@ class Config(object):
 
     def __handle_exception(self, exc_type, exc_value, exc_traceback):
         self.logger.error(u'Exception trapped:' + unicode(exc_value))
+
+    def get_overrides_for_device(self, dev):
+        overrides = {}
+        if self.customizations is not None and \
+                'devices' in self.customizations and \
+                dev.name in self.customizations['devices']:
+            overrides = self.customizations['devices'][dev.name]
+        return overrides
 
 
 class RegisterableDevice(object):

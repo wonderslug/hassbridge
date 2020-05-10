@@ -32,7 +32,7 @@ class ZWaveDefaultTypesGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        overrides = {}
+        overrides = config.get_overrides_for_device(dev)
 
         if u'zwave' != str(dev.protocol).lower():
             return devices
@@ -40,9 +40,6 @@ class ZWaveDefaultTypesGenerator(object):
         bridge_type = ZWaveDefaultTypesGenerator._evaluate_device_type(
             dev,
             logger)
-        if 'devices' in config.customizations and dev.name in \
-                config.customizations['devices']:
-            overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():

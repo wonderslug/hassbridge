@@ -35,7 +35,7 @@ class VirtualDefaultTypesGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        overrides = {}
+        overrides = config.get_overrides_for_device(dev)
 
         if str(dev.protocol).lower() != VIRTUAL_DEVICES_PROTOCOL \
                 and str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
@@ -44,9 +44,6 @@ class VirtualDefaultTypesGenerator(object):
         bridge_type = VirtualDefaultTypesGenerator._evaluate_device_type(
             dev,
             logger)
-        if 'devices' in config.customizations and dev.name in \
-                config.customizations['devices']:
-            overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():

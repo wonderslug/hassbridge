@@ -62,14 +62,11 @@ class InsteonDefaultTypesGenerator(object):
     def generate(dev, config, logger):
 
         devices = {}
-        overrides = {}
+        overrides = config.get_overrides_for_device(dev)
         if u'insteon' != str(dev.protocol).lower():
             return devices
         bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev,
                                                                          logger)
-        if 'devices' in config.customizations and dev.name in \
-                config.customizations['devices']:
-            overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
@@ -179,12 +176,9 @@ class InsteonInputOutputTypesGenerator(InsteonDefaultTypesGenerator):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        overrides = {}
+        overrides = config.get_overrides_for_device(dev)
         bridge_type = InsteonInputOutputTypesGenerator._evaluate_device_type(
             dev, logger)
-        if 'devices' in config.customizations and dev.name in \
-                config.customizations['devices']:
-            overrides = config.customizations['devices'][dev.name]
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
@@ -211,10 +205,7 @@ class InsteonRemoteTypesGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        overrides = {}
-        if 'devices' in config.customizations and dev.name in \
-                config.customizations['devices']:
-            overrides = config.customizations['devices'][dev.name]
+        overrides = config.get_overrides_for_device(dev)
 
         if dev.model in INSTEON_REMOTE_MODELS:
             button_map = INSTEON_REMOTE_MODELS[dev.model]
