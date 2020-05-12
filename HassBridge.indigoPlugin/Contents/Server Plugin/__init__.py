@@ -106,7 +106,9 @@ class Config(object):
 
             if os.path.isfile(self.customize_file_path):
                 stream = file(self.customize_file_path, 'r')
-                customizations =  yaml.full_load(stream)
+                customizations = yaml.full_load(stream)
+                if customizations is None:
+                    customizations = {}
             else:
                 self.logger.error("Unable to find customization file {}"
                                  .format(self.customize_file_path))
