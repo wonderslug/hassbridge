@@ -23,6 +23,8 @@
 from hassbridge import str2bool, TOPIC_ROOT, UpdatableDevice
 import __main__
 
+import indigo
+
 from hass_devices.base import BaseStatefulHAEntity
 
 
@@ -53,6 +55,12 @@ class BaseStatefulHAVariable(BaseStatefulHAEntity, UpdatableDevice):
                                  payload=var.value,
                                  qos=self.state_topic_qos,
                                  retain=self.state_topic_retain)
+
+    @property
+    def indigo_entity(self):
+        if int(self._indigo_entity_id) not in indigo.variables:
+            return None
+        return indigo.variables[int(self._indigo_entity_id)]
 
 
 class VariableBinarySensor(BaseStatefulHAVariable):
