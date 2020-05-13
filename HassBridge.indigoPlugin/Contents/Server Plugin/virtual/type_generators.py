@@ -81,4 +81,6 @@ class VirtualDefaultTypesGenerator(object):
                     bridge_type = VirtualBinarySensor.__name__
                 else:
                     bridge_type = VirtualSwitch.__name__
+            elif dev.model == u'Virtual On/Off Device':
+                bridge_type = VirtualSwitch.__name__
         return bridge_type
