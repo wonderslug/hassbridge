@@ -43,6 +43,8 @@ class ZWaveDefaultTypesGenerator(object):
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
+            logger.debug("Setting {} as bridge type {}"
+                         .format(dev.name, bridge_type))
             hass_dev = globals()[bridge_type](dev, overrides, logger,
                                               config.hass_discovery_prefix)
             devices[str(dev.id)] = hass_dev

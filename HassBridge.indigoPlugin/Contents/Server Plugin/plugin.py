@@ -465,21 +465,27 @@ class Plugin(indigo.PluginBase):
 
     def _register_ha_device(self, ha_device):
         if ha_device.indigo_entity is not None \
+                and (ha_device.indigo_entity.id in indigo.devices
+                     or ha_device.indigo_entity.id in indigo.variables) \
                 and isinstance(ha_device, RegisterableDevice):
+            self.logger.debug(
+                "Attempting to register \"{}\" "
+                "for indigo entity {} id:{}"
+                    .format(ha_device.name,
+                            ha_device.indigo_entity.name,
+                            ha_device.indigo_entity.id))
             ha_device.register()
 
     def _unregister_ha_device(self, ha_device):
         if ha_device.indigo_entity is not None \
                 and isinstance(ha_device, RegisterableDevice):
+            self.logger.debug(
+                "Attempting to unregister \"{}\"".format(ha_device.name))
             ha_device.cleanup()
 
     def _register_ha_devices(self):
-        for ha_dev_id, ha_dev in self._ha_devices.iteritems():
-            if ha_dev.indigo_entity is not None \
-                    and (ha_dev.indigo_entity.id in indigo.devices
-                         or ha_dev.indigo_entity.id in indigo.variables) \
-                    and isinstance(ha_dev, RegisterableDevice):
-                ha_dev.register()
+        for ha_device_id, ha_device in self._ha_devices.iteritems():
+            self._register_ha_device(ha_device)
 
 
 class DeviceGeneratorFactory(object):
