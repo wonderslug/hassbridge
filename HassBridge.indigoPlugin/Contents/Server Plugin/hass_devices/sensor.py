@@ -48,12 +48,19 @@ class Sensor(BaseStatefulHADevice):
         return "sensor"
 
     DEVICE_CLASS_KEY = "device_class"
-    DEFAULT_DEVICE_CLASS = None
+    DEFAULT_DEVICE_CLASS = "None"
 
     @property
     def device_class(self):
+        ret = self.DEFAULT_DEVICE_CLASS
+        if self.indigo_entity.subModel == u'Humidity':
+            ret = u'humidity'
+        elif self.indigo_entity.subModel == u'Luminance':
+            ret = u'illuminance'
+        elif self.indigo_entity.subModel == u'Temperature':
+            ret = u'temperature'
         ret = self._overrideable_get(self.DEVICE_CLASS_KEY,
-                                     self.DEFAULT_DEVICE_CLASS)
+                                     ret)
         return ret.format(d=self) if ret is not None else ret
 
     def _send_state(self, dev):
@@ -80,10 +87,17 @@ class Sensor(BaseStatefulHADevice):
         return str2bool(retval.format(d=self))
 
     UNIT_OF_MEASUREMENT_KEY = "unit_of_measurement"
-    DEFAULT_UNIT_OF_MEASUREMENT = None
+    DEFAULT_UNIT_OF_MEASUREMENT = ""
 
     @property
     def unit_of_measurement(self):
+        ret = self.DEFAULT_UNIT_OF_MEASUREMENT
+        if self.indigo_entity.subModel == u'Humidity':
+            ret = u'%'
+        elif self.indigo_entity.subModel == u'Luminance':
+            ret = u'lx'
+        elif self.indigo_entity.subModel == u'Temperature':
+            ret = self.indigo_entity.states[u'sensorValue.ui'].split(' ')[-1]
         ret = self._overrideable_get(self.UNIT_OF_MEASUREMENT_KEY,
-                                     self.DEFAULT_UNIT_OF_MEASUREMENT)
+                                     ret)
         return ret.format(d=self) if ret is not None else ret
