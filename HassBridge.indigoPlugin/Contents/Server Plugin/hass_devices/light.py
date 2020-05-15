@@ -107,15 +107,10 @@ class Light(BaseCommandableHADevice):
                                     value=int(msg.payload))
 
     def on_command_message(self, client, userdata, msg):
-        self.logger.debug("Command message {} recieved on {}".format(msg.payload, msg.topic))
         if self._transition_from_dimmer:
             self._transition_from_dimmer = False
             return
         super(Light, self).on_command_message(client, userdata, msg)
-        if msg.payload == self.payload_on and not indigo.devices[self.id].onState:
-            indigo.device.turnOn(self.id)
-        elif msg.payload == self.payload_off and indigo.devices[self.id].onState:
-            indigo.device.turnOff(self.id)
 
     def update(self, orig_dev, new_dev):
         super(Light, self).update(orig_dev, new_dev)
