@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 import __main__
 import indigo
 import tzlocal
-from hass_devices import BinarySensor, Cover, Fan, Light, Sensor, Switch
+from hass_devices import BinarySensor, Cover, Fan, Light, Lock, Sensor, Switch
 from hass_devices.base import Base, BaseHAEntity
 from hassbridge import TOPIC_ROOT, TimedUpdateCheck
 
@@ -57,6 +57,12 @@ class InsteonSwitch(Switch, InsteonGeneralCommandProcessor):
 class InsteonLight(Light, InsteonGeneralCommandProcessor):
     def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
         super(InsteonLight, self).__init__(indigo_entity, overrides, logger,
+                                           discovery_prefix)
+
+
+class InsteonLock(Lock, InsteonGeneralCommandProcessor):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(InsteonLock, self).__init__(indigo_entity, overrides, logger,
                                            discovery_prefix)
 
 

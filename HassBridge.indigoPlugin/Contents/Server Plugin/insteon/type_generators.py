@@ -26,7 +26,8 @@ from .command_processors import INSTEON_EVENTS
 from .devices import (
     InsteonBatteryStateSensor, InsteonBinarySensor,
     InsteonButtonActivityTracker, InsteonCover, InsteonFan,
-    InsteonKeypadButtonLight, InsteonLight, InsteonRemote, InsteonSensor,
+    InsteonKeypadButtonLight, InsteonLight, InsteonLock,
+    InsteonRemote, InsteonSensor,
     InsteonSwitch)
 
 INSTEON_KEYPAD_8_BUTTON_MAP = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G',
@@ -127,7 +128,10 @@ class InsteonDefaultTypesGenerator(object):
             else:
                 bridge_type = InsteonSensor.__name__
         elif type(dev) is indigo.RelayDevice:
-            bridge_type = InsteonSwitch.__name__
+            if dev.ownerProps.get("IsLockSubType", False):
+                bridge_type = InsteonLock.__name__
+            else:
+                bridge_type = InsteonSwitch.__name__
         elif type(dev) is indigo.DimmerDevice:
             bridge_type = InsteonLight.__name__
         elif type(dev) is indigo.SpeedControlDevice:

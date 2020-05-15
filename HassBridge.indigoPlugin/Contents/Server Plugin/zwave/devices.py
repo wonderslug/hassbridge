@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from hass_devices import BinarySensor, Fan, Light, Sensor, Switch
+from hass_devices import BinarySensor, Fan, Light, Lock, Sensor, Switch
 from hassbridge import TimedUpdateCheck, TOPIC_ROOT
 import __main__
 
@@ -34,6 +34,12 @@ class ZWaveSwitch(Switch):
 class ZWaveLight(Light):
     def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
         super(ZWaveLight, self).__init__(indigo_entity, overrides, logger,
+                                         discovery_prefix)
+
+
+class ZWaveLock(Lock):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(ZWaveLock, self).__init__(indigo_entity, overrides, logger,
                                          discovery_prefix)
 
 
@@ -90,3 +96,6 @@ class ZWaveBatteryStateSensor(Sensor, TimedUpdateCheck):
                                            payload=battery_state,
                                            qos=self.state_topic_qos,
                                            retain=self.state_topic_retain)
+
+    def _send_state(self, dev):
+        self._send_battery_state(self.indigo_entity.batteryLevel)

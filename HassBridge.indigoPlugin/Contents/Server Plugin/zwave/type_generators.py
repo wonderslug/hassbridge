@@ -23,7 +23,7 @@
 import indigo
 
 from .devices import (
-    ZWaveBinarySensor, ZWaveFan, ZWaveLight, ZWaveSensor,
+    ZWaveBinarySensor, ZWaveFan, ZWaveLight, ZWaveLock, ZWaveSensor,
     ZWaveSwitch, ZWaveBatteryStateSensor)
 
 
@@ -73,7 +73,10 @@ class ZWaveDefaultTypesGenerator(object):
             else:
                 bridge_type = ZWaveSensor.__name__
         elif type(dev) is indigo.RelayDevice:
-            bridge_type = ZWaveSwitch.__name__
+            if dev.ownerProps.get("IsLockSubType", False):
+                bridge_type = ZWaveLock.__name__
+            else:
+                bridge_type = ZWaveSwitch.__name__
         elif type(dev) is indigo.DimmerDevice:
             bridge_type = ZWaveLight.__name__
         elif type(dev) is indigo.SpeedControlDevice:

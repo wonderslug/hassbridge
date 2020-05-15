@@ -26,14 +26,17 @@ from .binary_sensor import BinarySensor
 from .cover import Cover
 from .fan import Fan
 from .light import Light
+from .lock import Lock
 from .sensor import Sensor
 from .switch import Switch
+
 
 __all__ = [
     'BinarySensor',
     'Cover',
     'Fan',
     'Light',
+    'Lock',
     'Sensor',
     'Switch'
 ]
