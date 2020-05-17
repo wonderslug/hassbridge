@@ -35,18 +35,23 @@ class VariableDefaultTypesGenerator(object):
         else:
             bridge_type = VariableSensor.__name__
 
-        if 'variables' in config.customizations and variable.name in config.customizations['variables']:
+        if 'variables' in config.customizations and \
+                variable.name in config.customizations['variables']:
             overrides = config.customizations['variables'][variable.name]
 
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
 
         if bridge_type and bridge_type in globals():
-            hass_dev = globals()[bridge_type](variable, overrides, logger, config.hass_discovery_prefix)
+            hass_dev = globals()[bridge_type](variable,
+                                              overrides,
+                                              logger,
+                                              config.hass_discovery_prefix)
             variables[str(variable.id)] = hass_dev
 
         return variables
 
     @staticmethod
-    def is_bridgeable(dev, logger):
+    # pylint: disable=unused-argument
+    def is_bridgeable(dev):
         return True

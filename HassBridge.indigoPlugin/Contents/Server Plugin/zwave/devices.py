@@ -21,44 +21,31 @@
 #  SOFTWARE.
 
 from hass_devices import BinarySensor, Fan, Light, Lock, Sensor, Switch
-from hassbridge import TimedUpdateCheck, TOPIC_ROOT
-import __main__
+from hassbridge import TimedUpdateCheck, get_mqtt_client
 
 
 class ZWaveSwitch(Switch):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveSwitch, self).__init__(indigo_entity,
-                                          overrides, logger, discovery_prefix)
+    pass
 
 
 class ZWaveLight(Light):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveLight, self).__init__(indigo_entity, overrides, logger,
-                                         discovery_prefix)
+    pass
 
 
 class ZWaveLock(Lock):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveLock, self).__init__(indigo_entity, overrides, logger,
-                                         discovery_prefix)
+    pass
 
 
 class ZWaveFan(Fan):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveFan, self).__init__(indigo_entity, overrides, logger,
-                                       discovery_prefix)
+    pass
 
 
 class ZWaveBinarySensor(BinarySensor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveBinarySensor, self).__init__(indigo_entity, overrides,
-                                                logger, discovery_prefix)
+    pass
 
 
 class ZWaveSensor(Sensor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(ZWaveSensor, self).__init__(indigo_entity, overrides, logger,
-                                          discovery_prefix)
+    pass
 
 
 class ZWaveBatteryStateSensor(Sensor, TimedUpdateCheck):
@@ -77,9 +64,9 @@ class ZWaveBatteryStateSensor(Sensor, TimedUpdateCheck):
                                       + " Battery").format(d=self)
     @property
     def unit_of_measurement(self):
-        return self._overrideable_get(self.UNIT_OF_MEASUREMENT_KEY,
-                                      self.DEFAULT_UNIT_OF_MEASURE
-                                      ).format(d=self)
+        return self._overrideable_get(
+            self.UNIT_OF_MEASUREMENT_KEY,
+            self.DEFAULT_UNIT_OF_MEASURE).format(d=self)
 
     def update(self, orig_dev, new_dev):
         pass
@@ -92,10 +79,11 @@ class ZWaveBatteryStateSensor(Sensor, TimedUpdateCheck):
         self._send_attributes(self.indigo_entity)
 
     def _send_battery_state(self, battery_state):
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
-                                           payload=battery_state,
-                                           qos=self.state_topic_qos,
-                                           retain=self.state_topic_retain)
+        get_mqtt_client().publish(topic=self.state_topic,
+                                  payload=battery_state,
+                                  qos=self.state_topic_qos,
+                                  retain=self.state_topic_retain)
 
+    # pylint: disable=unused-argument
     def _send_state(self, dev):
         self._send_battery_state(self.indigo_entity.batteryLevel)

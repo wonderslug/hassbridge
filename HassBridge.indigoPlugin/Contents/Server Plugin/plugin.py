@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #  Copyright (c) 2020 Brian Towles
@@ -27,49 +26,56 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), 'libs')))
 sys.path.insert(0, os.path.abspath(os.getcwd()))
-if __name__ == '__main__' and __package__ == None:
+if __name__ == '__main__' and __package__ is None:
     imp.load_source('hassbridge',
                     os.path.normpath(os.path.join(os.getcwd(), '__init__.py')))
     imp.load_source('hassbridge.plugin',
                     os.path.normpath(os.path.join(os.getcwd(), 'plugin.py')))
-    __package__ = "hassbridge"
-    __name__ = "hassbridge.plugin"
+    __package__ = "hassbridge"  # pylint: disable=redefined-builtin
+    __name__ = "hassbridge.plugin"  # pylint: disable=redefined-builtin
 
 # Note the "indigo" module is automatically imported and made available inside
 # our global name space by the host process.
 
-import indigo
+# pylint: disable=wrong-import-position
 import json
+# pylint: disable=wrong-import-position, import-error
+import indigo
+# pylint: disable=wrong-import-position, import-error
 import paho.mqtt.client as mqtt
+# pylint: disable=import-error
 import requests
 
+# pylint: disable=import-error, wrong-import-position
 from hassbridge import (
-    Config, CommandProcessor, UpdatableDevice,
-    RegisterableDevice, TimedUpdateCheck, MqttClient)
+    Config,
+    CommandProcessor,
+    UpdatableDevice,
+    RegisterableDevice,
+    TimedUpdateCheck,
+    MqttClient)
 
+# pylint: disable=relative-import
 from insteon import (
     InsteonDefaultTypesGenerator, InsteonKeypadTypesGenerator,
     InsteonInputOutputTypesGenerator, InsteonRemoteTypesGenerator,
     InsteonBatteryPoweredSensorsTypeGenerator)
+# pylint: disable=relative-import
 from variables import VariableDefaultTypesGenerator
+# pylint: disable=relative-import
 from virtual import VirtualDefaultTypesGenerator
+# pylint: disable=relative-import
 from zwave import (
     ZWaveDefaultTypesGenerator,
     ZWaveBatteryPoweredSensorsTypeGenerator)
 
 
-pVer = 0
-
-mqtt_client = None
-
-plugin_instance = None
-
-
 class Plugin(indigo.PluginBase):
-    # def pluginstoreUpdate(self):
-    #     iurl = 'http://www.indigodomo.com/pluginstore/139/'
-    #     self.browserOpen(iurl)
+    """Hassbridge Plugin.
 
+    This is a plugin for Indigo to bridge devices to Home Assistant.
+
+    """
     ########################################
     # Main Functions
     ######################
@@ -77,19 +83,17 @@ class Plugin(indigo.PluginBase):
     def __init__(self, plugin_id, display_name, version, prefs):
         indigo.PluginBase.__init__(self, plugin_id, display_name, version,
                                    prefs)
-        pVer = version
-        plugin_instance = self
 
-        self.debug = prefs.get(u"showDebugInfo", False)
+        self.debug = prefs.get(u'showDebugInfo', False)
         if self.debug:
-            self.logger.debug(u"Log debugging enabled")
+            self.logger.debug(u'Log debugging enabled')
         else:
-            self.logger.debug(u"Log debugging disabled")
+            self.logger.debug(u'Log debugging disabled')
 
         self.config = Config(prefs, self.logger)
 
         # mqtt setup
-        client = MqttClient.getInstance()
+        client = MqttClient.get_instance()
 
         self.mqtt_client = client.client = self._setup_mqtt_client()
         self.mqtt_client.on_connect = self.on_mqtt_connect
@@ -105,7 +109,9 @@ class Plugin(indigo.PluginBase):
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
+    # pylint: disable=unused-argument
     def handle_exception(self, exc_type, exc_value, exc_traceback):
+        """General exception handler"""
         self.logger.error(u'Exception trapped:' + unicode(exc_value))
 
     ####
@@ -122,21 +128,23 @@ class Plugin(indigo.PluginBase):
                 client.tls_insecure_set(True)
         return client
 
-    def update_perfs(self, plugin_prefs):
+    def _update_perfs(self, plugin_prefs):
         self.config = Config(plugin_prefs, self.logger)
         self._disconnect_from_mqtt_broker()
-        client = MqttClient.getInstance()
+        client = MqttClient.get_instance()
         self.mqtt_client = client.client = self._setup_mqtt_client()
         self._connect_to_mqtt_broker()
         self._setup_ha_devices()
         self._register_ha_devices()
 
+    # pylint: disable=unused-argument, redefined-builtin
     def bridgable_devices_list_generator(self, filter="", valuesDict=None,
                                          typeId="", targetId=0):
-        self.logger.debug(u"Getting list of Bridgable Devices")
+        """List genertor for config shows the list of bridgeable devices."""
+        self.logger.debug(u'Getting list of Bridgable Devices')
         return_list = list()
         for dev in indigo.devices:
-            if DeviceGeneratorFactory.is_bridgeable(dev, self.logger):
+            if DeviceGeneratorFactory.is_bridgeable(dev):
                 return_list.append((str(dev.id), dev.name))
         return return_list
 
@@ -146,10 +154,10 @@ class Plugin(indigo.PluginBase):
 
     def closedPrefsConfigUi(self, values_dict, user_cancelled):
         if not user_cancelled:
-            self.update_perfs(values_dict)
+            self._update_perfs(values_dict)
 
     def runConcurrentThread(self):
-        self.logger.debug(u"Starting Concurrent Thread")
+        self.logger.debug(u'Starting Concurrent Thread')
         while True:
             if self._started:
                 if not self.mqtt_connected:
@@ -158,8 +166,9 @@ class Plugin(indigo.PluginBase):
                 self._check_timed_updates()
             self.sleep(60)
 
+    # pylint: disable=unused-argument
     def deviceCreated(self, dev):
-        self.logger.debug(u"Device Created")
+        self.logger.debug(u'Device Created')
         self._setup_ha_devices()
         self._register_ha_devices()
 
@@ -167,10 +176,12 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.deviceUpdated(self, orig_dev, new_dev)
         self._update_ha_device(orig_dev, new_dev)
 
+    # pylint: disable=unused-argument
     def deviceDeleted(self, dev):
         self._setup_ha_devices()
         self._register_ha_devices()
 
+    # pylint: disable=unused-argument
     def variableCreated(self, var):
         self._setup_ha_devices()
         self._register_ha_devices()
@@ -179,12 +190,13 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.variableUpdated(self, orig_var, new_var)
         self._update_ha_device(orig_var, new_var)
 
+    # pylint: disable=unused-argument
     def variableDeleted(self, var):
         self._setup_ha_devices()
         self._register_ha_devices()
 
     def startup(self):
-        self.logger.debug(u"startup called")
+        self.logger.debug(u'startup called')
 
         # initial setup of ha devices
         self._setup_ha_devices()
@@ -203,7 +215,7 @@ class Plugin(indigo.PluginBase):
         self._started = True
 
     def shutdown(self):
-        self.logger.debug(u"shutdown called")
+        self.logger.debug(u'shutdown called')
         self._disconnect_from_mqtt_broker()
         self._started = False
 
@@ -217,52 +229,53 @@ class Plugin(indigo.PluginBase):
     def _connect_to_mqtt_broker(self):
         try:
             self._disconnect_from_mqtt_broker()
-            self.logger.info(u"Connecting to the MQTT Server...")
+            self.logger.info(u'Connecting to the MQTT Server...')
             self.mqtt_client.username_pw_set(username=self.config.mqtt_username,
                                              password=self.config.mqtt_password)
             self.mqtt_client.connect(self.config.mqtt_server,
                                      self.config.mqtt_port, 59)
-            self.logger.info(u"Connected to MQTT Server!")
+            self.logger.info(u'Connected to MQTT Server!')
             self.mqtt_client.loop_start()
-        except Exception:
+        except Exception:    # pylint: disable=broad-except
             t, v, tb = sys.exc_info()
             if v.errno == 61:
                 self.logger.critical(
-                    u"Connection Refused when connecting to broker.")
+                    u'Connection Refused when connecting to broker.')
             elif v.errno == 60:
-                self.logger.error(u"Timeout when connecting to broker.")
+                self.logger.error(u'Timeout when connecting to broker.')
             else:
                 self.handle_exception(t, v, tb)
                 raise
 
     # The callback for when the client receives
     # a CONNACK response from the server.
+    # pylint: disable=unused-argument
     def on_mqtt_connect(self, client, userdata, flags, rc):
         try:
             self.logger.debug(
-                u"Connected to MQTT server with result code " + unicode(rc))
+                u'Connected to MQTT server with result code ' + unicode(rc))
             if rc == 0:
                 self.mqtt_connected = True
                 self._register_ha_devices()
             if rc == 1:
-                indigo.server.self.logger(u"Error: Invalid Protocol Version.")
+                self.logger.error(u'Error: Invalid Protocol Version.')
             if rc == 2:
-                indigo.server.self.logger(u"Error: Invalid Client Identifier.")
+                self.logger.error(u'Error: Invalid Client Identifier.')
             if rc == 3:
-                indigo.server.self.logger(u"Error: Server Unavailable.")
+                self.logger.error(u'Error: Server Unavailable.')
             if rc == 4:
-                indigo.server.self.logger(u"Error: Bad Username or Password.")
+                self.logger.error(u'Error: Bad Username or Password.')
             if rc == 5:
-                indigo.server.self.logger(u"Error: Not Authorised.")
-        except Exception:
+                self.logger.error(u'Error: Not Authorised.')
+        except Exception:  # pylint: disable=broad-except
             t, v, tb = sys.exc_info()
             self.logger.debug({t, v, tb})
             self.handle_exception(t, v, tb)
 
     def _disconnect_from_mqtt_broker(self):
         if self.mqtt_connected:
-            self.logger.debug(u"Disconnecting from MQTT Broker")
-            for ha_device_id, ha_device in self._ha_devices.iteritems():
+            self.logger.debug(u'Disconnecting from MQTT Broker')
+            for _, ha_device in self._ha_devices.iteritems():
                 if ha_device.indigo_entity is not None \
                         and isinstance(ha_device, RegisterableDevice):
                     ha_device.shutdown()
@@ -270,16 +283,17 @@ class Plugin(indigo.PluginBase):
             self.mqtt_client.loop_stop()
 
     def on_mqtt_disconnect(self):
-        self.logger.warn(u"Disconnected from MQTT Broker. ")
+        self.logger.warn(u'Disconnected from MQTT Broker.')
         self.mqtt_connected = False
 
     # The callback for when a PUBLISH message is received from the server.
+    # pylint: disable=unused-argument
     def on_mqtt_message(self, client, userdata, msg):
         try:
             self.logger.warn(
-                u"Unhandled Message recd: " + msg.topic + " | " + unicode(
+                u'Unhandled Message recd: ' + msg.topic + " | " + unicode(
                     msg.payload))
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             t, v, tb = sys.exc_info()
             self.handle_exception(t, v, tb)
 
@@ -300,7 +314,7 @@ class Plugin(indigo.PluginBase):
             raise
 
     def _check_timed_updates(self):
-        for ha_device_id, ha_device in self._ha_devices.iteritems():
+        for _, ha_device in self._ha_devices.iteritems():
             if isinstance(ha_device, TimedUpdateCheck):
                 ha_device.check_for_update()
 
@@ -333,8 +347,8 @@ class Plugin(indigo.PluginBase):
             if resp.status_code is not requests.codes['OK']:
                 self.logger.warn(
                     u'Unable to send event to home assitant, recieved {}'
-                        .format(resp.text))
-        except Exception as e:
+                    .format(resp.text))
+        except Exception as e:  # pylint: disable=unused-variable
             t, v, tb = sys.exc_info()
             self.handle_exception(t, v, tb)
             raise
@@ -343,81 +357,103 @@ class Plugin(indigo.PluginBase):
     # Setup and MQTT Registration
     ####
     def _setup_ha_devices(self):
-        self._remap_ha_devices()
+        self._map_indigo_entries()
         self._refresh_ha_info()
 
-    def _remap_ha_devices(self):
+    def _map_indigo_devices(self,
+                            old_ha_devices,
+                            new_device_followers_map,
+                            new_address_mapping,
+                            device_remove_list):
+        # Setup the list of devices
+        for indigo_device in indigo.devices:
+            if str(indigo_device.id) in self.pluginPrefs['devices']:
+
+                # Get the ha devices for each indigo device
+                hass_devices = DeviceGeneratorFactory.generate(
+                    indigo_device, self.config, self.logger)
+
+                # Go through HA devices
+                for _, ha_device in hass_devices.iteritems():
+                    # setup the followers list
+                    if str(indigo_device.id) not in \
+                            new_device_followers_map and \
+                            ha_device.is_following(str(indigo_device.id)):
+                        new_device_followers_map[str(indigo_device.id)] = []
+                    if ha_device.is_following(str(indigo_device.id)):
+                        new_device_followers_map[
+                            str(indigo_device.id)].append(ha_device)
+
+                    # Set up the address to id map
+                    if indigo_device.address:
+                        if str(
+                                indigo_device.address) not in new_address_mapping:
+                            new_address_mapping[
+                                str(indigo_device.address)] = []
+                        new_address_mapping[
+                            str(indigo_device.address)].append(ha_device)
+
+                self._ha_devices.update(hass_devices)
+
+            # Find and remove unused ha devices
+            if str(indigo_device.id) not in \
+                    self.pluginPrefs['devices'] and \
+                    str(indigo_device.id) in old_ha_devices:
+                self._unregister_ha_device(
+                    old_ha_devices[str(indigo_device.id)])
+                device_remove_list.append(str(indigo_device.id))
+
+    # pylint: disable=unused-argument
+    def _map_indigo_variables(self,
+                              old_ha_devices,
+                              new_device_followers_map,
+                              new_address_mapping,
+                              device_remove_list):
+        # Set up the list of variables
+        for indigo_variable in indigo.variables:
+            if str(indigo_variable.id) in self.pluginPrefs['variables']:
+
+                # Get the ha devices for each indigo variable
+                hass_devices = VariableGeneratorFactory.generate(
+                    indigo_variable, self.config, self.logger)
+
+                # Go through HA devices
+                for _, ha_device in hass_devices.iteritems():
+                    # setup the followers list
+                    if str(indigo_variable.id) not in \
+                            new_device_followers_map and \
+                            ha_device.is_following(str(indigo_variable.id)):
+                        new_device_followers_map[
+                            str(indigo_variable.id)] = []
+                    if ha_device.is_following(str(indigo_variable.id)):
+                        new_device_followers_map[
+                            str(indigo_variable.id)].append(ha_device)
+
+                self._ha_devices.update(hass_devices)
+
+            # Find and remove unused ha devices
+            if str(indigo_variable.id) not in \
+                    self.pluginPrefs['variables'] and \
+                    str(indigo_variable.id) in old_ha_devices:
+                self._unregister_ha_device(
+                    old_ha_devices[str(indigo_variable.id)])
+                device_remove_list.append(str(indigo_variable.id))
+
+    def _map_indigo_entries(self):
         try:
             old_ha_devices = self._ha_devices
             new_device_followers_map = {}
             new_address_mapping = {}
             device_remove_list = []
 
-            # Setup the list of devices
-            for indigo_device in indigo.devices:
-                if str(indigo_device.id) in self.pluginPrefs['devices']:
-
-                    # Get the ha devices for each indigo device
-                    hass_devices = DeviceGeneratorFactory.generate(
-                        indigo_device, self.config, self.logger)
-
-                    # Go through HA devices
-                    for ha_device_id, ha_device in hass_devices.iteritems():
-                        # setup the followers list
-                        if str(
-                                indigo_device.id) not in new_device_followers_map and ha_device.is_following(
-                                str(indigo_device.id)):
-                            new_device_followers_map[str(indigo_device.id)] = []
-                        if ha_device.is_following(str(indigo_device.id)):
-                            new_device_followers_map[
-                                str(indigo_device.id)].append(ha_device)
-
-                        # Set up the address to id map
-                        if indigo_device.address:
-                            if str(
-                                    indigo_device.address) not in new_address_mapping:
-                                new_address_mapping[
-                                    str(indigo_device.address)] = []
-                            new_address_mapping[
-                                str(indigo_device.address)].append(ha_device)
-
-                    self._ha_devices.update(hass_devices)
-
-                # Find and remove unused ha devices
-                if str(indigo_device.id) not in self.pluginPrefs[
-                    'devices'] and str(indigo_device.id) in old_ha_devices:
-                    self._unregister_ha_device(
-                        old_ha_devices[str(indigo_device.id)])
-                    device_remove_list.append(str(indigo_device.id))
-
-            # Set up the list of variables
-            for indigo_variable in indigo.variables:
-                if str(indigo_variable.id) in self.pluginPrefs['variables']:
-
-                    # Get the ha devices for each indigo variable
-                    hass_devices = VariableGeneratorFactory.generate(
-                        indigo_variable, self.config, self.logger)
-
-                    # Go through HA devices
-                    for ha_device_id, ha_device in hass_devices.iteritems():
-                        # setup the followers list
-                        if str(
-                                indigo_variable.id) not in new_device_followers_map and ha_device.is_following(
-                            str(indigo_variable.id)):
-                            new_device_followers_map[
-                                str(indigo_variable.id)] = []
-                        if ha_device.is_following(str(indigo_variable.id)):
-                            new_device_followers_map[
-                                str(indigo_variable.id)].append(ha_device)
-
-                    self._ha_devices.update(hass_devices)
-
-                # Find and remove unused ha devices
-                if str(indigo_variable.id) not in self.pluginPrefs[
-                    'variables'] and str(indigo_variable.id) in old_ha_devices:
-                    self._unregister_ha_device(
-                        old_ha_devices[str(indigo_variable.id)])
-                    device_remove_list.append(str(indigo_variable.id))
+            self._map_indigo_devices(old_ha_devices,
+                                     new_device_followers_map,
+                                     new_address_mapping,
+                                     device_remove_list)
+            self._map_indigo_variables(old_ha_devices,
+                                       new_device_followers_map,
+                                       new_address_mapping,
+                                       device_remove_list)
 
             # remove the references to old devices
             for remove_device in device_remove_list:
@@ -426,7 +462,7 @@ class Plugin(indigo.PluginBase):
             self._ha_device_followers = new_device_followers_map
             self._ha_device_address_mapping = new_address_mapping
 
-        except Exception as e:
+        except Exception as e:   # pylint: disable=unused-variable
             t, v, tb = sys.exc_info()
             self.handle_exception(t, v, tb)
             raise
@@ -443,22 +479,25 @@ class Plugin(indigo.PluginBase):
                                     verify=self.config.hass_ssl_validate,
                                     headers=headers)
             if resp.status_code is not requests.codes['OK']:
-                self.logger.warn(
-                    u'Unable to get mapping of indigo devices to home assitant entities, recieved {}'
-                        .format(resp.text))
+                self.logger.warn(u'Unable to get mapping of indigo devices to '
+                                 u'home assitant entities, recieved {}'.format(resp.text))
 
             ha_entities = resp.json()
             for ha_entity in ha_entities:
                 if u'attributes' in ha_entity \
-                        and u'indigo_id' in ha_entity[u'attributes'] \
-                        and str(ha_entity[u'attributes'][u'indigo_id']) in self._ha_devices:
-                    self._ha_devices[str(ha_entity[u'attributes'][u'indigo_id'])].ha_entity_id = \
+                   and u'indigo_id' in ha_entity[u'attributes'] \
+                   and str(ha_entity[u'attributes'][u'indigo_id']) \
+                        in self._ha_devices:
+                    self._ha_devices[
+                        str(ha_entity[u'attributes'][u'indigo_id'])
+                    ].ha_entity_id = \
                     ha_entity[u'entity_id']
-                    self._ha_devices[str(ha_entity[u'attributes'][
-                                             u'indigo_id'])].ha_friendly_name = \
-                        ha_entity[u'attributes'][u'friendly_name']
+                    self._ha_devices[
+                        str(
+                            ha_entity[u'attributes'][u'indigo_id']
+                        )].ha_friendly_name = ha_entity[u'attributes'][u'friendly_name']
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=unused-variable
             t, v, tb = sys.exc_info()
             self.handle_exception(t, v, tb)
             raise
@@ -469,22 +508,21 @@ class Plugin(indigo.PluginBase):
                      or ha_device.indigo_entity.id in indigo.variables) \
                 and isinstance(ha_device, RegisterableDevice):
             self.logger.debug(
-                "Attempting to register \"{}\" "
-                "for indigo entity {} id:{}"
-                    .format(ha_device.name,
-                            ha_device.indigo_entity.name,
-                            ha_device.indigo_entity.id))
+                u'Attempting to register \"{}\" for indigo entity {} id:{}'
+                .format(ha_device.name,
+                        ha_device.indigo_entity.name,
+                        ha_device.indigo_entity.id))
             ha_device.register()
 
     def _unregister_ha_device(self, ha_device):
         if ha_device.indigo_entity is not None \
                 and isinstance(ha_device, RegisterableDevice):
             self.logger.debug(
-                "Attempting to unregister \"{}\"".format(ha_device.name))
+                u'Attempting to unregister \"{}\"'.format(ha_device.name))
             ha_device.cleanup()
 
     def _register_ha_devices(self):
-        for ha_device_id, ha_device in self._ha_devices.iteritems():
+        for _, ha_device in self._ha_devices.iteritems():
             self._register_ha_device(ha_device)
 
 
@@ -506,13 +544,12 @@ class DeviceGeneratorFactory(object):
         for generator in DeviceGeneratorFactory.generators:
             devices.update(
                 generator.generate(indigo_device, config, logger))
-            pass
         return devices
 
     @staticmethod
-    def is_bridgeable(indigo_device, logger):
+    def is_bridgeable(indigo_device):
         for generator in DeviceGeneratorFactory.generators:
-            if generator.is_bridgeable(indigo_device, logger):
+            if generator.is_bridgeable(indigo_device):
                 return True
         return False
 
@@ -528,17 +565,11 @@ class VariableGeneratorFactory(object):
         for generator in VariableGeneratorFactory.generators:
             variables.update(
                 generator.generate(indigo_variable, config, logger))
-            pass
         return variables
 
     @staticmethod
-    def is_bridgeable(indigo_variable, logger):
+    def is_bridgeable(indigo_variable):
         for generator in VariableGeneratorFactory.generators:
-            if generator.is_bridgeable(indigo_variable, logger):
+            if generator.is_bridgeable(indigo_variable):
                 return True
         return False
-
-
-def get_mqtt_client():
-    client = MqttClient.getInstance()
-    return client.client

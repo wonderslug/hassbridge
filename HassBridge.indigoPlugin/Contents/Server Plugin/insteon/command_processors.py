@@ -41,10 +41,12 @@ class InsteonCommandProcessor(CommandProcessor):
     def process_command(self, cmd, config):
         self.logger.debug(
             u'HA Device {} processing Insteon Keypad Button command {} from {}'
-                .format(self.ha_friendly_name, cmd.cmdFunc, self.indigo_entity.name))
+            .format(self.ha_friendly_name,
+                    cmd.cmdFunc, self.indigo_entity.name))
         event = payload = None
         if cmd.cmdFunc is not None and cmd.cmdFunc in INSTEON_EVENTS:
-            event = "{}_{}".format(config.hass_event_prefix, INSTEON_EVENTS[cmd.cmdFunc])
+            event = "{}_{}".format(config.hass_event_prefix,
+                                   INSTEON_EVENTS[cmd.cmdFunc])
             payload = {
                 "sender_id": self.ha_friendly_name.lower().replace(" ", "_"),
                 "name": self.ha_friendly_name,
@@ -63,8 +65,7 @@ class InsteonGeneralCommandProcessor(InsteonCommandProcessor):
         if cmd.cmdScene == 1:
             return super(InsteonGeneralCommandProcessor, self)\
                 .process_command(cmd, config)
-        else:
-            return None, None
+        return None, None
 
 
 class InsteonKeypadButtonCommandProcessor(InsteonCommandProcessor):
@@ -72,8 +73,7 @@ class InsteonKeypadButtonCommandProcessor(InsteonCommandProcessor):
         if cmd.cmdScene == self.button:
             return super(InsteonKeypadButtonCommandProcessor, self)\
                 .process_command(cmd, config)
-        else:
-            return None, None
+        return None, None
 
 
 class InsteonRemoteCommandProcessor(InsteonKeypadButtonCommandProcessor):

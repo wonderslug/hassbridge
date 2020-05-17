@@ -24,45 +24,12 @@ from hass_devices import Light, Switch, BinarySensor
 
 
 class VirtualSwitch(Switch):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(VirtualSwitch, self).__init__(indigo_entity,
-                                            overrides, logger, discovery_prefix)
-        self.config.update({
-            'device': {
-                'identifiers': [indigo_entity.id],
-                'manufacturer': u'{} via Indigo MQTT Bridge'.format(
-                    indigo_entity.protocol),
-                'model': indigo_entity.model,
-                'name': indigo_entity.name
-            }
-        })
+    pass
 
 
 class VirtualLight(Light):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(VirtualLight, self).__init__(indigo_entity,
-                                           overrides, logger, discovery_prefix)
-        self.config.update({
-            'device': {
-                'identifiers': [indigo_entity.id],
-                'manufacturer': u'{} via Indigo MQTT Bridge'.format(
-                    indigo_entity.protocol),
-                'model': indigo_entity.model,
-                'name': indigo_entity.name
-            }
-        })
+    pass
 
 
 class VirtualBinarySensor(BinarySensor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(VirtualBinarySensor, self).__init__(indigo_entity, overrides,
-                                                  logger, discovery_prefix)
-        self.config.update({
-            'device': {
-                'identifiers': [indigo_entity.id],
-                'manufacturer': u'{} via Indigo MQTT Bridge'.format(
-                    indigo_entity.protocol),
-                'model': indigo_entity.model,
-                'name': indigo_entity.name
-            }
-        })
+    pass

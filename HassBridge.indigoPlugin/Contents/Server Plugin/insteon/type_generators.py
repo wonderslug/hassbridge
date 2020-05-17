@@ -64,10 +64,9 @@ class InsteonDefaultTypesGenerator(object):
 
         devices = {}
         overrides = config.get_overrides_for_device(dev)
-        if u'insteon' != str(dev.protocol).lower():
+        if str(dev.protocol).lower() != u'insteon':
             return devices
-        bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev,
-                                                                         logger)
+        bridge_type = InsteonDefaultTypesGenerator._evaluate_device_type(dev)
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
@@ -82,8 +81,8 @@ class InsteonDefaultTypesGenerator(object):
 
     @staticmethod
     def _define_likley_device_class(indigo_device, overrides):
-        if 'config_vars' not in overrides or 'device_class' not in overrides[
-            'config_vars']:
+        if 'config_vars' not in overrides or \
+                'device_class' not in overrides['config_vars']:
             if str(indigo_device.model) == u'Leak Sensor':
                 InsteonDefaultTypesGenerator._add_config_vars_device_class(
                     overrides, HA_DEVICE_CLASS_MOISTURE)
@@ -111,31 +110,30 @@ class InsteonDefaultTypesGenerator(object):
         overrides['config_vars']['device_class'] = device_class
 
     @staticmethod
-    def is_bridgeable(dev, logger):
-        if u'insteon' != str(dev.protocol).lower():
+    def is_bridgeable(dev):
+        if str(dev.protocol).lower() != u'insteon':
             return False
-        return True if InsteonDefaultTypesGenerator._evaluate_device_type(
-            dev,
-            logger) is not None else False
+        return True if InsteonDefaultTypesGenerator._evaluate_device_type(dev) \
+                       is not None else False
 
     @staticmethod
-    def _evaluate_device_type(dev, logger):
+    def _evaluate_device_type(dev):
         bridge_type = None
         # is_battery_powered = False
-        if type(dev) is indigo.SensorDevice:
+        if isinstance(dev, indigo.SensorDevice):
             if not dev.supportsSensorValue:
                 bridge_type = InsteonBinarySensor.__name__
             else:
                 bridge_type = InsteonSensor.__name__
-        elif type(dev) is indigo.RelayDevice:
+        elif isinstance(dev, indigo.DimmerDevice):
+            bridge_type = InsteonLight.__name__
+        elif isinstance(dev, indigo.SpeedControlDevice):
+            bridge_type = InsteonFan.__name__
+        elif isinstance(dev, indigo.RelayDevice):
             if dev.ownerProps.get("IsLockSubType", False):
                 bridge_type = InsteonLock.__name__
             else:
                 bridge_type = InsteonSwitch.__name__
-        elif type(dev) is indigo.DimmerDevice:
-            bridge_type = InsteonLight.__name__
-        elif type(dev) is indigo.SpeedControlDevice:
-            bridge_type = InsteonFan.__name__
         return bridge_type
 
 
@@ -144,7 +142,6 @@ class InsteonKeypadTypesGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        overrides = {}
         if dev.model in INSTEON_KEYPAD_MODELS:
             if dev.buttonConfiguredCount == 6:
                 button_map = INSTEON_KEYPAD_6_BUTTON_MAP
@@ -160,7 +157,7 @@ class InsteonKeypadTypesGenerator(object):
                 devices[device.id] = device
 
                 # Setup the device activty trackers for the buttons
-                for event, activity_type in INSTEON_EVENTS.iteritems():
+                for _, activity_type in INSTEON_EVENTS.iteritems():
                     button_activity_device = InsteonButtonActivityTracker(
                         dev,
                         config.customizations,
@@ -173,7 +170,8 @@ class InsteonKeypadTypesGenerator(object):
         return devices
 
     @staticmethod
-    def is_bridgeable(dev, logger):
+    # pylint: disable=unused-argument
+    def is_bridgeable(dev):
         return False
 
 
@@ -183,8 +181,8 @@ class InsteonInputOutputTypesGenerator(InsteonDefaultTypesGenerator):
     def generate(dev, config, logger):
         devices = {}
         overrides = config.get_overrides_for_device(dev)
-        bridge_type = InsteonInputOutputTypesGenerator._evaluate_device_type(
-            dev, logger)
+        bridge_type = InsteonInputOutputTypesGenerator.\
+            _evaluate_device_type(dev)
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
@@ -196,14 +194,14 @@ class InsteonInputOutputTypesGenerator(InsteonDefaultTypesGenerator):
         return devices
 
     @staticmethod
-    def is_bridgeable(dev, logger):
-        return True if InsteonInputOutputTypesGenerator._evaluate_device_type(
-            dev, logger) is not None else False
+    def is_bridgeable(dev):
+        return True if InsteonInputOutputTypesGenerator.\
+                           _evaluate_device_type(dev) is not None else False
 
     @staticmethod
-    def _evaluate_device_type(dev, logger):
+    def _evaluate_device_type(dev):
         bridge_type = None
-        if type(dev) is indigo.MultiIODevice:
+        if isinstance(dev, indigo.MultiIODevice):
             bridge_type = InsteonCover.__name__
         return bridge_type
 
@@ -223,7 +221,7 @@ class InsteonRemoteTypesGenerator(object):
                 devices[device.id] = device
 
                 # Setup the device activty trackers for the buttons
-                for event, activity_type in INSTEON_EVENTS.iteritems():
+                for _, activity_type in INSTEON_EVENTS.iteritems():
                     button_activity_device = InsteonButtonActivityTracker(
                         dev,
                         config.customizations,
@@ -236,7 +234,7 @@ class InsteonRemoteTypesGenerator(object):
         return devices
 
     @staticmethod
-    def is_bridgeable(dev, logger):
+    def is_bridgeable(dev):
         if dev.model in INSTEON_REMOTE_MODELS:
             return True
         return False
@@ -262,5 +260,6 @@ class InsteonBatteryPoweredSensorsTypeGenerator(object):
         return devices
 
     @staticmethod
-    def is_bridgeable(dev, logger):
+    # pylint: disable=unused-argument
+    def is_bridgeable(dev):
         return False

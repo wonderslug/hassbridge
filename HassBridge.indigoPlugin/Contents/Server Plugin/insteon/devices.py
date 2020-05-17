@@ -23,12 +23,11 @@
 import re
 from datetime import datetime, timedelta
 
-import __main__
 import indigo
 import tzlocal
 from hass_devices import BinarySensor, Cover, Fan, Light, Lock, Sensor, Switch
 from hass_devices.base import Base, BaseHAEntity
-from hassbridge import TOPIC_ROOT, TimedUpdateCheck
+from hassbridge import TOPIC_ROOT, TimedUpdateCheck, get_mqtt_client
 
 from .command_processors import (
     INSTEON_EVENTS, InsteonCommandProcessor,
@@ -37,55 +36,44 @@ from .command_processors import (
 
 
 class InsteonBinarySensor(BinarySensor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonBinarySensor, self).__init__(indigo_entity, overrides,
-                                                  logger, discovery_prefix)
+    pass
 
 
 class InsteonSensor(Sensor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonSensor, self).__init__(indigo_entity, overrides, logger,
-                                            discovery_prefix)
+    pass
 
 
 class InsteonSwitch(Switch, InsteonGeneralCommandProcessor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonSwitch, self).__init__(indigo_entity, overrides, logger,
-                                            discovery_prefix)
+    pass
 
 
 class InsteonLight(Light, InsteonGeneralCommandProcessor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonLight, self).__init__(indigo_entity, overrides, logger,
-                                           discovery_prefix)
+    pass
 
 
 class InsteonLock(Lock, InsteonGeneralCommandProcessor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonLock, self).__init__(indigo_entity, overrides, logger,
-                                           discovery_prefix)
+    pass
 
 
 class InsteonFan(Fan):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonFan, self).__init__(indigo_entity, overrides, logger,
-                                         discovery_prefix)
+    pass
 
 
 class InsteonCover(Cover):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
-        super(InsteonCover, self).__init__(indigo_entity, overrides, logger,
-                                           discovery_prefix)
+    pass
 
 
 class InsteonKeypadButtonLight(Switch, InsteonKeypadButtonCommandProcessor):
-    def __init__(self, indigo_entity, overrides, logger, discovery_prefix,
-                 button, label):
+    # pylint: disable=too-many-arguments
+    def __init__(self, indigo_entity, overrides, logger,
+                 discovery_prefix, button, label):
         self.is_relay = False
         self.button = button
         self.label = label
-        super(InsteonKeypadButtonLight, self).__init__(indigo_entity, overrides,
-                                                       logger, discovery_prefix)
+        super(InsteonKeypadButtonLight, self).__init__(indigo_entity,
+                                                       overrides,
+                                                       logger,
+                                                       discovery_prefix)
         self.id = "{}_{}".format(indigo_entity.id, button)
         self.parent_id = indigo_entity.id
 
@@ -110,20 +98,22 @@ class InsteonKeypadButtonLight(Switch, InsteonKeypadButtonCommandProcessor):
         name = re.sub(r"\s+", '_', name)
         return name
 
+    # pylint: disable=unused-argument
     def update(self, orig_dev, new_dev):
         self._send_state(new_dev)
 
     def _send_state(self, dev):
         state = self.payload_on if dev.ledStates[
             self.button - 1] else self.payload_off
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
-                                           payload=state,
-                                           qos=self.state_topic_qos,
-                                           retain=self.state_topic_retain)
+        get_mqtt_client().publish(topic=self.state_topic,
+                                  payload=state,
+                                  qos=self.state_topic_qos,
+                                  retain=self.state_topic_retain)
 
+    # pylint: disable=unused-argument
     def on_command_message(self, client, userdata, msg):
         self.logger.debug(
-            "Command message {} recieved on {}".format(msg.payload, msg.topic))
+            u'Command message {} recieved on {}'.format(msg.payload, msg.topic))
         if msg.payload == self.payload_on \
                 and not \
                 indigo.devices[self.parent_id].ledStates[self.button - 1]:
@@ -157,6 +147,7 @@ class InsteonButtonActivityTracker(BaseHAEntity, InsteonCommandProcessor):
     AUTOMATION_TYPE_KEY = "automation_type"
     DEFAULT_AUTOMATION_TYPE = "trigger"
 
+    # pylint: disable=too-many-arguments
     def __init__(self, indigo_entity, overrides, logger,
                  discovery_prefix, button, label, activity_type):
         self.button = button
@@ -189,9 +180,9 @@ class InsteonButtonActivityTracker(BaseHAEntity, InsteonCommandProcessor):
 
     @property
     def subtype(self):
-        return self._overrideable_get(self.SUBTYPE_KEY,
-                                      "Button {}".format(self.label)).format(
-            d=self)
+        return self._overrideable_get(
+            self.SUBTYPE_KEY,
+            "Button {}".format(self.label)).format(d=self)
 
     @property
     def name(self):
@@ -205,8 +196,8 @@ class InsteonButtonActivityTracker(BaseHAEntity, InsteonCommandProcessor):
         name = self._overrideable_get(self.CONFIG_NAME,
                                       self.indigo_entity.name + " Button {} {}"
                                       .format(self.label,
-                                              self.activity_type)).format(
-            d=self).lower()
+                                              self.activity_type))\
+                                      .format(d=self).lower()
         name = re.sub(r"[^\w\s]", '', name)
         name = re.sub(r"\s+", '_', name)
         return name
@@ -224,15 +215,15 @@ class InsteonButtonActivityTracker(BaseHAEntity, InsteonCommandProcessor):
     def process_command(self, cmd, config):
         if cmd.cmdScene == self.button and \
                 INSTEON_EVENTS[cmd.cmdFunc] == self.activity_type:
-            __main__.get_mqtt_client().publish(topic=self.topic,
-                                               payload=self.payload,
-                                               qos=self.qos,
-                                               retain=False)
+            get_mqtt_client().publish(topic=self.topic,
+                                      payload=self.payload,
+                                      qos=self.qos,
+                                      retain=False)
         return None, None
 
 
 class InsteonRemote(Base, InsteonRemoteCommandProcessor):
-
+    # pylint: disable=too-many-arguments
     def __init__(self, indigo_entity, overrides, logger, button, label):
         self.button = button
         self.label = label
@@ -245,11 +236,11 @@ class InsteonRemote(Base, InsteonRemoteCommandProcessor):
         extention = " Button {}".format(self.label) if self.label else " Button"
         return self._overrideable_get(
             self.CONFIG_NAME,
-            self.indigo_entity.name + extention).format(
-            d=self)
+            self.indigo_entity.name + extention).format(d=self)
 
 
 class InsteonBatteryStateSensor(BinarySensor, TimedUpdateCheck):
+    # pylint: disable=too-many-arguments
     def __init__(self, indigo_entity, overrides, logger, discovery_prefix,
                  no_comm_minutes):
         super(InsteonBatteryStateSensor, self).__init__(indigo_entity,
@@ -264,8 +255,7 @@ class InsteonBatteryStateSensor(BinarySensor, TimedUpdateCheck):
     def name(self):
         return self._overrideable_get(
             self.CONFIG_NAME,
-            self.indigo_entity.name + " Battery").format(
-            d=self)
+            self.indigo_entity.name + " Battery").format(d=self)
 
     def update(self, orig_dev, new_dev):
         pass
@@ -284,7 +274,7 @@ class InsteonBatteryStateSensor(BinarySensor, TimedUpdateCheck):
 
     def _send_battery_state(self, battery_state):
         state = self.payload_on if battery_state else self.payload_off
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
-                                           payload=state,
-                                           qos=self.state_topic_qos,
-                                           retain=self.state_topic_retain)
+        get_mqtt_client().publish(topic=self.state_topic,
+                                  payload=state,
+                                  qos=self.state_topic_qos,
+                                  retain=self.state_topic_retain)

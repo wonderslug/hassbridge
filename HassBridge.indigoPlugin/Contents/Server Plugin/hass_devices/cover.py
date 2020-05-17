@@ -21,17 +21,16 @@
 #  SOFTWARE.
 
 import indigo
-import __main__
+from hassbridge import get_mqtt_client
 
 from .base import BaseCommandableHADevice
 
 
 class Cover(BaseCommandableHADevice):
 
-    def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
         super(Cover, self).__init__(indigo_entity, overrides,
-            logger, discovery_prefix)
+                                    logger, discovery_prefix)
         if self.device_class is not None:
             self.config.update({self.DEVICE_CLASS_KEY: self.device_class})
         self.config.update({
@@ -53,7 +52,8 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def device_class(self):
-        ret = self._overrideable_get(self.DEVICE_CLASS_KEY,
+        ret = self._overrideable_get(
+            self.DEVICE_CLASS_KEY,
             self.DEFAULT_DEVICE_CLASS)
         return ret.format(d=self) if ret is not None else ret
 
@@ -62,7 +62,8 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def state_open(self):
-        return self._overrideable_get(self.STATE_OPEN_KEY,
+        return self._overrideable_get(
+            self.STATE_OPEN_KEY,
             self.DEFAULT_STATE_OPEN).format(d=self)
 
     STATE_CLOSED_KEY = "state_closed"
@@ -70,7 +71,8 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def state_closed(self):
-        return self._overrideable_get(self.STATE_CLOSED_KEY,
+        return self._overrideable_get(
+            self.STATE_CLOSED_KEY,
             self.DEFAULT_STATE_CLOSED).format(d=self)
 
     PAYLOAD_OPEN_KEY = "payload_open"
@@ -78,7 +80,8 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def payload_open(self):
-        return self._overrideable_get(self.PAYLOAD_OPEN_KEY,
+        return self._overrideable_get(
+            self.PAYLOAD_OPEN_KEY,
             self.DEFAULT_PAYLOAD_OPEN).format(d=self)
 
     PAYLOAD_CLOSE_KEY = "payload_close"
@@ -86,7 +89,8 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def payload_close(self):
-        return self._overrideable_get(self.PAYLOAD_CLOSE_KEY,
+        return self._overrideable_get(
+            self.PAYLOAD_CLOSE_KEY,
             self.DEFAULT_PAYLOAD_CLOSE).format(d=self)
 
     PAYLOAD_STOP_KEY = "payload_stop"
@@ -94,22 +98,24 @@ class Cover(BaseCommandableHADevice):
 
     @property
     def payload_stop(self):
-        return self._overrideable_get(self.PAYLOAD_STOP_KEY,
+        return self._overrideable_get(
+            self.PAYLOAD_STOP_KEY,
             self.DEFAULT_PAYLOAD_STOP).format(d=self)
 
     def _send_state(self, dev):
         state = self.state_open if not dev.binaryInputs[
             0] else self.state_closed
         self.logger.debug(
-            "Cover State set to {} for device {}".format(state, dev.name))
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
+            u"Cover State set to {} for device {}".format(state, dev.name))
+        get_mqtt_client().publish(
+            topic=self.state_topic,
             payload=state,
             qos=self.state_topic_qos,
             retain=self.state_topic_retain)
 
     def on_command_message(self, client, userdata, msg):
         self.logger.debug(
-            "Command message {} recieved on {}".format(msg.payload, msg.topic))
+            u"Command message {} recieved on {}".format(msg.payload, msg.topic))
         if msg.payload in [self.payload_open, self.payload_close,
-            self.payload_stop]:
+                           self.payload_stop]:
             indigo.iodevice.setBinaryOutput(self.id, index=0, value=True)

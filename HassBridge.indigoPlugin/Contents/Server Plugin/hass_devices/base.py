@@ -23,13 +23,12 @@
 import json
 import re
 
-import __main__
 import indigo
 import pytz
 import tzlocal
 from hassbridge import (
     MQTT_UNIQUE_ID_TEMPLATE, RegisterableDevice, TOPIC_ROOT, UpdatableDevice,
-    str2bool)
+    str2bool, get_mqtt_client)
 
 
 class Base(object):
@@ -95,7 +94,7 @@ class BaseHAEntity(Base, RegisterableDevice):
     CONFIG_QOS = "qos"
 
     def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
+                 discovery_prefix):
         super(BaseHAEntity, self).__init__(indigo_entity, overrides, logger)
         self.config_template = None
         self.ha_entity_id = None
@@ -153,12 +152,10 @@ class BaseHAEntity(Base, RegisterableDevice):
                                            self.DEFAULT_CONFIG_TOPIC_RETAIN))
 
     def register(self):
-        # TODO setup config for maintain device/config
         self.logger.debug(
-            unicode("Sending config for {d[name]}:{d[id]} to topic "
-                    "{d[config_topic]}").format(
-                d=self))
-        __main__.get_mqtt_client().publish(
+            u'Sending config for {d[name]}:{d[id]} '
+            u'to topic {d[config_topic]}'.format(d=self))
+        get_mqtt_client().publish(
             topic=self.config_topic,
             payload=json.dumps(self.config),
             qos=self.config_topic_qos,
@@ -166,10 +163,10 @@ class BaseHAEntity(Base, RegisterableDevice):
 
     def cleanup(self):
         self.logger.debug(
-            unicode("Cleaning up config mqtt topics for device "
-                    "{d[name]}:{d[id]} on topic {d[config_topic]}").format(
-                d=self))
-        __main__.get_mqtt_client().publish(
+            u'Cleaning up config mqtt topics for device '
+            u'{d[name]}:{d[id]} on topic {d[config_topic]}'
+            .format(d=self))
+        get_mqtt_client().publish(
             topic=self.config_topic,
             payload='',
             qos=self.config_topic_qos,
@@ -213,9 +210,11 @@ class BaseAvailableHAEntity(BaseHAEntity):
     CONFIG_PAYLOAD_NOT_AVAILALE = "payload_not_available"
 
     def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
+                 discovery_prefix):
         super(BaseAvailableHAEntity, self).__init__(indigo_entity,
-            overrides, logger, discovery_prefix)
+                                                    overrides,
+                                                    logger,
+                                                    discovery_prefix)
         self.config.update({
             self.CONFIG_AVAILABILITY_TOPIC: self.availability_topic,
             self.CONFIG_PAYLOAD_AVAILABLE: self.payload_available,
@@ -232,15 +231,14 @@ class BaseAvailableHAEntity(BaseHAEntity):
 
     def register(self):
         super(BaseAvailableHAEntity, self).register()
-        # TODO setup config for track availability and if to maintain
-        __main__.get_mqtt_client().will_set(
+        get_mqtt_client().will_set(
             topic=self.availability_topic,
             payload=self.payload_not_available)
-        self.logger.debug(unicode("Sending availability of {} for {} to {}")
+        self.logger.debug(u'Sending availability of {} for {} to {}'
                           .format(self.payload_available,
                                   self.name,
                                   self.availability_topic))
-        __main__.get_mqtt_client().publish(
+        get_mqtt_client().publish(
             topic=self.availability_topic,
             payload=self.payload_available,
             qos=self.availability_topic_qos,
@@ -248,10 +246,10 @@ class BaseAvailableHAEntity(BaseHAEntity):
 
     def cleanup(self):
         self.logger.debug(
-            unicode("Cleaning up availability mqtt topics for device "
-                    "{d[name]}:{d[id]} on topic {d[availability_topic]}")
-                .format(d=self))
-        __main__.get_mqtt_client().publish(
+            u'Cleaning up availability mqtt topics for device '
+            u'{d[name]}:{d[id]} on topic {d[availability_topic]}'
+            .format(d=self))
+        get_mqtt_client().publish(
             topic=self.availability_topic,
             payload='',
             qos=self.availability_topic_qos,
@@ -260,31 +258,37 @@ class BaseAvailableHAEntity(BaseHAEntity):
 
     @property
     def availability_topic(self):
-        return self._overrideable_get(self.CONFIG_AVAILABILITY_TOPIC,
+        return self._overrideable_get(
+            self.CONFIG_AVAILABILITY_TOPIC,
             self.AVAILABILITY_TOPIC_TEMPLATE).format(d=self)
 
     @property
     def availability_topic_qos(self):
-        return int(self._overrideable_get(self.AVAILABILITY_TOPIC_QOS_KEY,
+        return int(self._overrideable_get(
+            self.AVAILABILITY_TOPIC_QOS_KEY,
             self.DEFAULT_AVAILABILITY_TOPIC_QOS))
 
     @property
     def availability_topic_retain(self):
-        return bool(self._overrideable_get(self.AVAILABILITY_TOPIC_RETAIN_KEY,
-            self.DEFAULT_AVAILABILITY_TOPIC_RETAIN))
+        return bool(
+            self._overrideable_get(
+                self.AVAILABILITY_TOPIC_RETAIN_KEY,
+                self.DEFAULT_AVAILABILITY_TOPIC_RETAIN))
 
     @property
     def payload_available(self):
-        return self._overrideable_get(self.CONFIG_PAYLOAD_AVAILABLE,
+        return self._overrideable_get(
+            self.CONFIG_PAYLOAD_AVAILABLE,
             self.DEFAULT_PAYLOAD_AVAILABLE).format(d=self)
 
     @property
     def payload_not_available(self):
-        return self._overrideable_get(self.CONFIG_PAYLOAD_NOT_AVAILALE,
+        return self._overrideable_get(
+            self.CONFIG_PAYLOAD_NOT_AVAILALE,
             self.DEFAULT_PAYLOAD_NOT_AVAILABLE).format(d=self)
 
     def shutdown(self):
-        __main__.get_mqtt_client().publish(
+        get_mqtt_client().publish(
             topic=self.availability_topic,
             payload=self.payload_not_available,
             qos=self.availability_topic_qos,
@@ -296,9 +300,9 @@ class BaseStatefulHAEntity(BaseAvailableHAEntity):
     """ Adds basic stateful topics for a MQTT Discovered Entry """
 
     def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
+                 discovery_prefix):
         super(BaseStatefulHAEntity, self).__init__(indigo_entity, overrides,
-            logger, discovery_prefix)
+                                                   logger, discovery_prefix)
         self.config.update({
             self.STATE_TOPIC_KEY: self._overrideable_get(self.STATE_TOPIC_KEY,
                                                          self.state_topic)
@@ -309,7 +313,8 @@ class BaseStatefulHAEntity(BaseAvailableHAEntity):
 
     @property
     def state_topic(self):
-        return self._overrideable_get(self.STATE_TOPIC_KEY,
+        return self._overrideable_get(
+            self.STATE_TOPIC_KEY,
             self.DEFAULT_STATE_TOPIC).format(d=self)
 
     STATE_TOPIC_QOS_KEY = "state_topic_qos"
@@ -317,26 +322,30 @@ class BaseStatefulHAEntity(BaseAvailableHAEntity):
 
     @property
     def state_topic_qos(self):
-        return int(self._overrideable_get(self.STATE_TOPIC_QOS_KEY,
-            self.DEFAULT_STATE_TOPIC_QOS))
+        return int(
+            self._overrideable_get(
+                self.STATE_TOPIC_QOS_KEY,
+                self.DEFAULT_STATE_TOPIC_QOS))
 
     STATE_TOPIC_RETAIN_KEY = "state_topic_retain"
     DEFAULT_STATE_TOPIC_RETAIN = True
 
     @property
     def state_topic_retain(self):
-        return bool(self._overrideable_get(self.STATE_TOPIC_RETAIN_KEY,
-            self.DEFAULT_STATE_TOPIC_RETAIN))
+        return bool(
+            self._overrideable_get(
+                self.STATE_TOPIC_RETAIN_KEY,
+                self.DEFAULT_STATE_TOPIC_RETAIN))
 
     def cleanup(self):
         self.logger.debug(
-            unicode("Cleaning up state mqtt topics for device {d[name]}:{d[id]}"
-                    " on topic {d[state_topic]}")
-                .format(d=self))
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
-                                           payload='',
-                                           qos=self.state_topic_qos,
-                                           retain=self.state_topic_retain)
+            u'Cleaning up state mqtt topics for device {d[name]}:{d[id]}'
+            u' on topic {d[state_topic]}'
+            .format(d=self))
+        get_mqtt_client().publish(topic=self.state_topic,
+                                  payload='',
+                                  qos=self.state_topic_qos,
+                                  retain=self.state_topic_retain)
         super(BaseStatefulHAEntity, self).cleanup()
 
 
@@ -344,18 +353,21 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
     """ Provides the payload and attribute support for a Statful DEVICE """
 
     def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
-        super(BaseStatefulHADevice, self).__init__(indigo_entity, overrides,
+                 discovery_prefix):
+        super(BaseStatefulHADevice, self).__init__(
+            indigo_entity, overrides,
             logger, discovery_prefix)
         self.config.update({
-            self.PAYLOAD_OFF_KEY: self._overrideable_get(self.PAYLOAD_OFF_KEY,
+            self.PAYLOAD_OFF_KEY: self._overrideable_get(
+                self.PAYLOAD_OFF_KEY,
                 self.payload_off),
-            self.PAYLOAD_ON_KEY: self._overrideable_get(self.PAYLOAD_ON_KEY,
+            self.PAYLOAD_ON_KEY: self._overrideable_get(
+                self.PAYLOAD_ON_KEY,
                 self.payload_on),
             self.JSON_ATTRIBUTES_TOPIC_KEY: self.json_attribute_topic,
             'device': {
                 'identifiers': [indigo_entity.address, indigo_entity.id],
-                'manufacturer': unicode('{} via Indigo MQTT Bridge').format(
+                'manufacturer': u'{} via Indigo MQTT Bridge'.format(
                     indigo_entity.protocol),
                 'model': indigo_entity.model,
                 'name': indigo_entity.name
@@ -383,7 +395,8 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
 
     @property
     def json_attribute_topic(self):
-        return self._overrideable_get(self.JSON_ATTRIBUTES_TOPIC_KEY,
+        return self._overrideable_get(
+            self.JSON_ATTRIBUTES_TOPIC_KEY,
             self.JSON_ATTRIBUTES_TOPIC_TEMPLATE).format(d=self)
 
     DEFAULT_JSON_ATTRIBUTES_TOPIC_QOS = 0
@@ -391,8 +404,10 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
 
     @property
     def json_attribute_topic_qos(self):
-        return int(self._overrideable_get(self.JSON_ATTRIBUTES_TOPIC_QOS_KEY,
-            self.DEFAULT_JSON_ATTRIBUTES_TOPIC_QOS))
+        return int(
+            self._overrideable_get(
+                self.JSON_ATTRIBUTES_TOPIC_QOS_KEY,
+                self.DEFAULT_JSON_ATTRIBUTES_TOPIC_QOS))
 
     DEFAULT_JSON_ATTRIBUTES_TOPIC_RETAIN = True
     JSON_ATTRIBUTES_TOPIC_RETAIN_KEY = 'json_attributes_topic_retain'
@@ -400,7 +415,8 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
     @property
     def json_attribute_topic_retain(self):
         return bool(
-            self._overrideable_get(self.JSON_ATTRIBUTES_TOPIC_RETAIN_KEY,
+            self._overrideable_get(
+                self.JSON_ATTRIBUTES_TOPIC_RETAIN_KEY,
                 self.DEFAULT_JSON_ATTRIBUTES_TOPIC_RETAIN))
 
     def register(self):
@@ -408,13 +424,14 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
         self._send_state(self.indigo_entity)
         self._send_attributes(self.indigo_entity)
 
+    # pylint: disable=unused-argument
     def update(self, orig_dev, new_dev):
         self._send_state(new_dev)
         self._send_attributes(new_dev)
 
     def _send_state(self, dev):
         state = self.payload_on if dev.onState else self.payload_off
-        __main__.get_mqtt_client().publish(
+        get_mqtt_client().publish(
             topic=self.state_topic,
             payload=state,
             qos=self.state_topic_qos,
@@ -423,15 +440,15 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
     def _send_attributes(self, dev):
         attributes = {
             'last_changed': dev.lastChanged.replace(
-                tzinfo=tzlocal.get_localzone()).astimezone(pytz.utc).strftime(
-                '%Y-%m-%dT%H:%M:%S.%f%z'),
+                tzinfo=tzlocal.get_localzone()
+            ).astimezone(pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f%z'),
             'last_successful_com': dev.lastSuccessfulComm.replace(
-                tzinfo=tzlocal.get_localzone()).astimezone(pytz.utc).strftime(
-                '%Y-%m-%dT%H:%M:%S.%f%z'),
+                tzinfo=tzlocal.get_localzone()
+            ).astimezone(pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f%z'),
             'indigo_id': self.id,
         }
 
-        __main__.get_mqtt_client().publish(
+        get_mqtt_client().publish(
             topic=self.json_attribute_topic,
             payload=json.dumps(attributes),
             qos=self.json_attribute_topic_qos,
@@ -439,10 +456,10 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
 
     def cleanup(self):
         self.logger.debug(
-            unicode("Cleaning up json_attribute_topic mqtt topics for device "
-                    "{d[name]}:{d[id]} on topic {d[json_attribute_topic]}")
-                .format(d=self))
-        __main__.get_mqtt_client().publish(
+            u'Cleaning up json_attribute_topic mqtt topics for device '
+            u'{d[name]}:{d[id]} on topic {d[json_attribute_topic]}'
+            .format(d=self))
+        get_mqtt_client().publish(
             topic=self.json_attribute_topic,
             payload='',
             qos=self.json_attribute_topic_qos,
@@ -453,9 +470,9 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
 class BaseCommandableHADevice(BaseStatefulHADevice):
 
     def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
-        super(BaseCommandableHADevice, self).__init__(indigo_entity,
-            overrides, logger, discovery_prefix)
+                 discovery_prefix):
+        super(BaseCommandableHADevice, self).__init__(
+            indigo_entity, overrides, logger, discovery_prefix)
         self.config.update({
             self.COMMAND_TOPIC_KEY: self.command_topic,
             self.OPTIMISTIC_KEY: self.optimistic
@@ -466,7 +483,8 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
 
     @property
     def command_topic(self):
-        return self._overrideable_get(self.COMMAND_TOPIC_KEY,
+        return self._overrideable_get(
+            self.COMMAND_TOPIC_KEY,
             self.COMMAND_TOPIC_TEMPLATE).format(d=self)
 
     OPTIMISTIC_KEY = "optimistic"
@@ -474,7 +492,8 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
 
     @property
     def optimistic(self):
-        retval = self._overrideable_get(self.OPTIMISTIC_KEY,
+        retval = self._overrideable_get(
+            self.OPTIMISTIC_KEY,
             self.DEFAULT_OPTIMISTIC)
         return str2bool(retval.format(d=self))
 
@@ -482,16 +501,18 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
         super(BaseCommandableHADevice, self).register()
         # register command topic
         self.logger.debug(
-            unicode("Subscribing {} with id {}:{} to command topic {}")
+            u"Subscribing {} with id {}:{} to command topic {}"
             .format(self.hass_type, self.name, self.id, self.command_topic))
-        __main__.get_mqtt_client().subscribe(self.command_topic)
-        __main__.get_mqtt_client().message_callback_add(self.command_topic,
+        get_mqtt_client().subscribe(self.command_topic)
+        get_mqtt_client().message_callback_add(
+            self.command_topic,
             self.on_command_message)
 
+    # pylint: disable=unused-argument
     def on_command_message(self, client, userdata, msg):
         self.logger.debug(
-            unicode("Command message {} recieved on {}").format(msg.payload,
-                                                                msg.topic))
+            u"Command message {} recieved on {}".format(msg.payload,
+                                                        msg.topic))
         if msg.payload == self.payload_on and \
                 not indigo.devices[self.id].onState:
             indigo.device.turnOn(self.id)
@@ -501,10 +522,10 @@ class BaseCommandableHADevice(BaseStatefulHADevice):
 
     def cleanup(self):
         self.logger.debug(
-            unicode(
-                "Cleaning up command_topic mqtt topics for device "
-                "{d[name]}:{d[id]} on topic {d[command_topic]}").format(d=self))
-        __main__.get_mqtt_client().publish(
+            u'Cleaning up command_topic mqtt topics for device "'
+            u'{d[name]}:{d[id]} on topic {d[command_topic]}'
+            .format(d=self))
+        get_mqtt_client().publish(
             topic=self.command_topic,
             payload='',
             retain=False)
