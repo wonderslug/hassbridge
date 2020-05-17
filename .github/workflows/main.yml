@@ -24,4 +24,6 @@ jobs:
 
     # Runs a single command using the runners shell
     - name: pylint
-      uses: cclauss/GitHub-Action-for-pylint@0.7.0
+      uses: fylein/python-pylint-github-action@v4
+      with:
+        args: pylint --rcfile=.pylintrc HassBridge.indigoPlugin/Contents/Server\ Plugin
