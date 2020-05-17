@@ -20,10 +20,11 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-import indigo
 import json
+import indigo
 
-from .devices import VirtualSwitch, VirtualLight, VirtualBinarySensor
+
+from .devices import VirtualSwitch, VirtualBinarySensor
 
 VIRTUAL_DEVICES_PLUGIN = \
     u'com.perceptiveautomation.indigoplugin.devicecollection'
@@ -41,13 +42,11 @@ class VirtualDefaultTypesGenerator(object):
                 and str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
             return devices
 
-        bridge_type = VirtualDefaultTypesGenerator._evaluate_device_type(
-            dev,
-            logger)
+        bridge_type = VirtualDefaultTypesGenerator._evaluate_device_type(dev)
         if 'bridge_type' in overrides:
             bridge_type = overrides['bridge_type']
         if bridge_type and bridge_type in globals():
-            logger.debug("Setting {} as bridge type {}"
+            logger.debug(u'Setting {} as bridge type {}'
                          .format(dev.name, bridge_type))
             hass_dev = globals()[bridge_type](dev, overrides, logger,
                                               config.hass_discovery_prefix)
@@ -61,23 +60,22 @@ class VirtualDefaultTypesGenerator(object):
         overrides['config_vars']['device_class'] = device_class
 
     @staticmethod
-    def is_bridgeable(dev, logger):
+    def is_bridgeable(dev):
         if str(dev.protocol).lower() != VIRTUAL_DEVICES_PROTOCOL \
                 or str(dev.pluginId).lower() != VIRTUAL_DEVICES_PLUGIN:
             return False
 
-        return True if VirtualDefaultTypesGenerator._evaluate_device_type(
-            dev,
-            logger) is not None else False
+        return True if VirtualDefaultTypesGenerator._evaluate_device_type(dev) \
+                       is not None else False
 
     @staticmethod
-    def _evaluate_device_type(dev, logger):
+    def _evaluate_device_type(dev):
         bridge_type = None
-        if type(dev) is indigo.RelayDevice:
+        if isinstance(dev, indigo.RelayDevice):
             if dev.model == u'Device Group':
                 device_list = json.loads(dev.ownerProps['deviceListDict'])
-                if len(device_list['relays']) == 0 \
-                        and len(device_list['dimmers']) == 0:
+                if device_list['relays'] \
+                        and device_list['dimmers']:
                     bridge_type = VirtualBinarySensor.__name__
                 else:
                     bridge_type = VirtualSwitch.__name__

@@ -20,9 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-import __main__
-from hassbridge import str2bool
-
+from hassbridge import str2bool, get_mqtt_client
 from .base import BaseStatefulHADevice
 
 
@@ -64,9 +62,10 @@ class Sensor(BaseStatefulHADevice):
         return ret.format(d=self) if ret is not None else ret
 
     def _send_state(self, dev):
-        __main__.get_mqtt_client().publish(topic=self.state_topic,
-                                           payload=dev.sensorValue,
-                                           retain=self.state_topic_retain)
+        get_mqtt_client().publish(
+            topic=self.state_topic,
+            payload=dev.sensorValue,
+            retain=self.state_topic_retain)
 
     EXPIRE_AFTER_KEY = "expire_after"
     DEFAULT_EXPIRE_AFTER = 0

@@ -1,0 +1,4 @@
+[MASTER]
+init-hook='import sys; sys.path.append("libs")'
+disable=missing-docstring,too-many-instance-attributes,too-few-public-methods,import-error,invalid-name,duplicate-code
+ignore=HassBridge.indigoPlugin/Contents/Server\ Plugin/libs

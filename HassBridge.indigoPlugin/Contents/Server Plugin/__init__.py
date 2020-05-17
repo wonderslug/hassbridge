@@ -23,23 +23,24 @@
 import os
 import sys
 
+# pylint: disable=import-error
 import jwt
-import requests
-import yaml
 from jwt.exceptions import InvalidTokenError
+import requests
+# pylint: disable=import-error
+import yaml
 
 DEFAULT_CONFIG_LOCATION = './config_templates'
 EVENT_PREFIX_DEFAULT = u'indigo_hassbridge'
 HASS_DISCOVERY_PREFIX_DEFAULT = u'homeassistant'
 HASS_URL_DEFAULT = u'http://localhost:8123'
 
-TOPIC_ROOT = '{d[discovery_prefix]}/{d[hass_type]}/{d[mqtt_name]}'
-MQTT_UNIQUE_ID_TEMPLATE = 'indigo_mqtt_{d[mqtt_name]}'
+TOPIC_ROOT = u'{d[discovery_prefix]}/{d[hass_type]}/{d[mqtt_name]}'
+MQTT_UNIQUE_ID_TEMPLATE = u'indigo_mqtt_{d[mqtt_name]}'
 
 
-
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
+def str2bool(value):
+    return value.lower() in (u"yes", u"true", u"t", u"1")
 
 
 class Config(object):
@@ -75,10 +76,13 @@ class Config(object):
         if self.hass_url.endswith('/'):
             self.hass_url = self.hass_url[:-1]
 
-        self.hass_ssl_validate = pluginPrefs.get(u'https_validate_cert', True)
-        self.hass_event_prefix = pluginPrefs.get(u'event_prefix',
+        self.hass_ssl_validate = pluginPrefs.get(
+            u'https_validate_cert', True)
+        self.hass_event_prefix = pluginPrefs.get(
+            u'event_prefix',
             EVENT_PREFIX_DEFAULT)
-        self.hass_discovery_prefix = pluginPrefs.get(u'discovery_prefix',
+        self.hass_discovery_prefix = pluginPrefs.get(
+            u'discovery_prefix',
             HASS_DISCOVERY_PREFIX_DEFAULT)
 
         # Setup the events session
@@ -86,12 +90,15 @@ class Config(object):
         self.hass_event_session.headers = self.hass_session_headers
 
         self.customizations = {}
-        self.use_customize_file = pluginPrefs.get(u"use_customization_file",
+        self.use_customize_file = pluginPrefs.get(
+            u"use_customization_file",
             False)
-        self.customize_file_path = pluginPrefs.get(u"customization_file_path",
+        self.customize_file_path = pluginPrefs.get(
+            u"customization_file_path",
             u"")
 
-        self.create_battery_sensors = pluginPrefs.get(u"create_battery_sensors",
+        self.create_battery_sensors = pluginPrefs.get(
+            u"create_battery_sensors",
             False)
 
         self.insteon_no_comm_minutes = int(pluginPrefs.get(
@@ -110,14 +117,15 @@ class Config(object):
                 if customizations is None:
                     customizations = {}
             else:
-                self.logger.error("Unable to find customization file {}"
-                                 .format(self.customize_file_path))
+                self.logger.error(u"Unable to find customization file {}"
+                                  .format(self.customize_file_path))
             return customizations
         except Exception:
-            t, v, tb = sys.exc_info()
-            self.__handle_exception(t, v, tb)
+            execp_type, execpt_value, except_traceback = sys.exc_info()
+            self.__handle_exception(execp_type, execpt_value, except_traceback)
             raise
 
+    # pylint: disable=unused-argument
     def __handle_exception(self, exc_type, exc_value, exc_traceback):
         self.logger.error(u'Exception trapped:' + unicode(exc_value))
 
@@ -147,9 +155,9 @@ class UpdatableDevice(object):
 
 
 class CommandProcessor(object):
+    # pylint: disable=no-self-use, unused-argument
     def process_command(self, cmd, config):
-        """
-        Handles converting a command into an event and payload to pass to
+        """Handles converting a command into an event and payload to pass to
         an EventSender
         """
         return None, None
@@ -160,20 +168,25 @@ class TimedUpdateCheck(object):
         pass
 
 
+def get_mqtt_client():
+    client = MqttClient.get_instance()
+    return client.client
+
+
 class MqttClient(object):
     # Here will be the instance stored.
     __instance = None
 
     @staticmethod
-    def getInstance():
+    def get_instance():
         """ Static access method. """
-        if MqttClient.__instance == None:
+        if MqttClient.__instance is None:
             MqttClient()
         return MqttClient.__instance
 
     def __init__(self):
         """ Virtually private constructor. """
-        if MqttClient.__instance != None:
+        if MqttClient.__instance is not None:
             raise Exception("This class is a singleton!")
         else:
             MqttClient.__instance = self

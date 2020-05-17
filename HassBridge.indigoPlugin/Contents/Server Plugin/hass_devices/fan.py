@@ -21,8 +21,7 @@
 #  SOFTWARE.
 
 import indigo
-from hassbridge import TOPIC_ROOT
-import __main__
+from hassbridge import TOPIC_ROOT, get_mqtt_client
 
 from .base import BaseCommandableHADevice
 
@@ -31,10 +30,9 @@ class Fan(BaseCommandableHADevice):
     DEFAULT_STATE_TOPIC = TOPIC_ROOT + "/fan/status"
     COMMAND_TOPIC_TEMPLATE = TOPIC_ROOT + "/fan/switch"
 
-    def __init__(self, indigo_entity, overrides, logger,
-            discovery_prefix):
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
         super(Fan, self).__init__(indigo_entity, overrides, logger,
-            discovery_prefix)
+                                  discovery_prefix)
         self.name_to_index = {"off": 0, "low": 1, "medium": 2, "high": 3}
         self.index_to_name = {0: "off", 1: "low", 2: "medium", 3: "high"}
 
@@ -56,7 +54,8 @@ class Fan(BaseCommandableHADevice):
 
     @property
     def speed_command_topic(self):
-        return self._overrideable_get(self.SPEED_COMMAND_TOPIC_KEY,
+        return self._overrideable_get(
+            self.SPEED_COMMAND_TOPIC_KEY,
             self.SPEED_COMMAND_TOPIC_TEMPLATE).format(d=self)
 
     SPEED_STATE_TOPIC_TEMPLATE = TOPIC_ROOT + "/speed/status"
@@ -64,7 +63,8 @@ class Fan(BaseCommandableHADevice):
 
     @property
     def speed_state_topic(self):
-        return self._overrideable_get(self.SPEED_STATE_TOPIC_KEY,
+        return self._overrideable_get(
+            self.SPEED_STATE_TOPIC_KEY,
             self.SPEED_STATE_TOPIC_TEMPLATE).format(d=self)
 
     SPEED_STATE_TOPIC_RETAIN_KEY = "speed_state_topic_retain"
@@ -72,7 +72,8 @@ class Fan(BaseCommandableHADevice):
 
     @property
     def speed_state_topic_retain(self):
-        return bool(self._overrideable_get(self.SPEED_STATE_TOPIC_RETAIN_KEY,
+        return bool(self._overrideable_get(
+            self.SPEED_STATE_TOPIC_RETAIN_KEY,
             self.DEFAULT_SPEED_STATE_TOPIC_RETAIN))
 
     def register(self):
@@ -80,18 +81,19 @@ class Fan(BaseCommandableHADevice):
 
         # register brightness command topic
         self.logger.debug(
-            "Subscribing {} with id {}:{} to speed command topic {}"
-                .format(self.hass_type,
-                self.name,
-                self.id,
-                self.speed_command_topic))
-        __main__.get_mqtt_client().message_callback_add(self.speed_command_topic,
+            u"Subscribing {} with id {}:{} to speed command topic {}"
+            .format(self.hass_type, self.name, self.id,
+                    self.speed_command_topic))
+        get_mqtt_client().message_callback_add(
+            self.speed_command_topic,
             self.on_speed_command_message)
-        __main__.get_mqtt_client().subscribe(self.speed_command_topic)
+        get_mqtt_client().subscribe(self.speed_command_topic)
         self.__send_speed_state(self.indigo_entity)
 
+    # pylint: disable=unused-argument
     def on_speed_command_message(self, client, userdata, msg):
-        indigo.speedcontrol.setSpeedIndex(self.id,
+        indigo.speedcontrol.setSpeedIndex(
+            self.id,
             value=self.name_to_index[msg.payload])
 
     def update(self, orig_dev, new_dev):
@@ -99,15 +101,17 @@ class Fan(BaseCommandableHADevice):
         self.__send_speed_state(new_dev)
 
     def __send_speed_state(self, dev):
-        __main__.get_mqtt_client().publish(topic=self.speed_state_topic,
+        get_mqtt_client().publish(
+            topic=self.speed_state_topic,
             payload=unicode(self.index_to_name[dev.speedIndex]),
             retain=self.speed_state_topic_retain)
 
     def cleanup(self):
         self.logger.debug(
-            "Cleaning up speed_state_topic mqtt topics for device {d[name]}:{d[id]} on topic {d[speed_state_topic]}".format(
-                d=self))
-        __main__.get_mqtt_client().publish(topic=self.speed_state_topic,
+            u'Cleaning up speed_state_topic mqtt topics for device '
+            u'{d[name]}:{d[id]} on topic {d[speed_state_topic]}'.format(d=self))
+        get_mqtt_client().publish(
+            topic=self.speed_state_topic,
             payload='',
             retain=False)
         super(Fan, self).cleanup()
