@@ -73,9 +73,10 @@ class VirtualDefaultTypesGenerator(object):
         bridge_type = None
         if isinstance(dev, indigo.RelayDevice):
             if dev.model == u'Device Group':
-                device_list = json.loads(dev.ownerProps['deviceListDict'])
-                if device_list['relays'] \
-                        and device_list['dimmers']:
+                device_list = json.loads(dev.ownerProps.get(u'deviceListDict'))
+                # pylint: disable=len-as-condition
+                if len(device_list.get(u'relays')) == 0 \
+                        and len(device_list.get(u'dimmers')) == 0:
                     bridge_type = VirtualBinarySensor.__name__
                 else:
                     bridge_type = VirtualSwitch.__name__
