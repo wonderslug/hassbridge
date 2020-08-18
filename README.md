@@ -107,6 +107,7 @@ devices:
     config_vars:
       device_class: safety
   Street Gate:
+    enable_battery_sensor: False
     config_vars:
       device_class: door
   West Side Gate:
@@ -121,6 +122,9 @@ devices:
   Garage Door:
     config_vars:
       device_class: garage
+  Some Insteon Switchlink:
+    enable_led_backlight_light: True
+    backlight_set_mechansim: swl        # this is the older protocol. default is kpl (newer command)   
 
 variables:                        
   front_door_state:                    # Indigo variable name
@@ -136,6 +140,33 @@ variables:
       device_class: window
  ```
 
+### Bridge Types
+The **bridge_type** in the main config of a device or variable customization can be set to allow you to override the 
+behavior of the Indigo device and how it is presented to Home Assistant.  This changes the mechanims used to talk to 
+the Indigo device when a command for it comes in from Home Assistant, so this may cause erratic behaviour.  This should 
+mainly be used when the default mapping by HassBridge is incorrect, and you want to force the correct mapping.
+
+#### Available Bridge Types
+| Bridge Types |  
+|:--------------------|  
+| InsteonBinarySensor |
+| InsteonCover |
+| InsteonFan |
+| InsteonLight |
+| InsteonLock |  
+| InsteonSensor |  
+| InsteonSwitch |  
+| VariableBinarySensor |
+| VariableSensor |
+| VirtualBinarySensor |
+| VirtualLight |
+| VirtualSwitch |
+| ZWaveBinarySensor |
+| ZWaveFan |
+| ZWaveLight |
+| ZWaveLock |
+| ZWaveSensor |
+| ZWaveSwitch |
 
 ## General Device Mapping
 | Indigo Device Class | Home Assistant Type |  

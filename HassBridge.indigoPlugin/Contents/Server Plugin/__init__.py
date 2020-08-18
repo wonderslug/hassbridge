@@ -100,6 +100,10 @@ class Config(object):
         self.create_battery_sensors = pluginPrefs.get(
             u"create_battery_sensors",
             False)
+        self.create_insteon_led_backlight_lights = pluginPrefs.get(
+            u'create_insteon_led_backlight_lights',
+            False
+        )
 
         self.insteon_no_comm_minutes = int(pluginPrefs.get(
             u"insteon_battery_minutes_no_com", 1440))
@@ -135,6 +139,8 @@ class Config(object):
                 'devices' in self.customizations and \
                 dev.name in self.customizations['devices']:
             overrides = self.customizations['devices'][dev.name]
+        if overrides is None:
+            overrides = {}
         return overrides
 
 
