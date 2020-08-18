@@ -107,6 +107,7 @@ devices:
     config_vars:
       device_class: safety
   Street Gate:
+    enable_battery_sensor: False
     config_vars:
       device_class: door
   West Side Gate:
