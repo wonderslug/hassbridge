@@ -92,12 +92,16 @@
     </Field>
 
     <Field id="create_battery_sensors" type="checkbox" defaultValue="false">
-        <Label>Create Battery Sensors:</Label>
+        <Label>Create Battery Sensors Default:</Label>
         <Description>(for battery powered devices)</Description>
     </Field>
     <Field id="insteon_battery_minutes_no_com" type="textfield" defaultValue="1440" visibleBindingId="create_battery_sensors" visibleBindingValue="true">
         <Label>Insteon Battery No Comm Minutes:</Label>
         <Description>The number of minutes since the last communication to mark the sensor as low battery</Description>
+    </Field>
+    <Field id="create_insteon_led_backlight_lights" type="checkbox" defaultValue="false">
+        <Label>Insteon LED Backlight Lights Default:</Label>
+        <Description>(Default for light entries in Home Assistant to control the LED Backlights)</Description>
     </Field>
 
     <Field id="variablesSeperator" type="separator"/>

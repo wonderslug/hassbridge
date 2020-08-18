@@ -121,6 +121,9 @@ devices:
   Garage Door:
     config_vars:
       device_class: garage
+  Some Insteon Switchlink:
+    enable_led_backlight_light: True
+    backlight_set_mechansim: swl        # this is the older protocol. default is kpl (newer command)   
 
 variables:                        
   front_door_state:                    # Indigo variable name

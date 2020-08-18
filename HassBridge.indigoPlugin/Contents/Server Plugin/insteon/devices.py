@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 import indigo
 import tzlocal
 from hass_devices import BinarySensor, Cover, Fan, Light, Lock, Sensor, Switch
-from hass_devices.base import Base, BaseHAEntity
+from hass_devices.base import Base, BaseHAEntity, BaseCommandableHADevice
 from hassbridge import TOPIC_ROOT, TimedUpdateCheck, get_mqtt_client
 
 from .command_processors import (
@@ -278,3 +278,139 @@ class InsteonBatteryStateSensor(BinarySensor, TimedUpdateCheck):
                                   payload=state,
                                   qos=self.state_topic_qos,
                                   retain=self.state_topic_retain)
+
+
+class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
+
+    BACKLIGHT_SET_MECHANISM_KEY = "backlight_set_mechansim"
+    DEFAULT_BACKLIGHT_SET_MECHANISM = "kpl"
+
+    def __init__(self, indigo_entity, overrides, logger, discovery_prefix):
+        super(InsteonLedBacklight, self).__init__(indigo_entity,
+                                                  overrides,
+                                                  logger,
+                                                  discovery_prefix)
+        self.id = "{}_backlight".format(indigo_entity.id)
+        self.parent_id = indigo_entity.id
+        self.switch_state = self.payload_on
+        self.brightness_level = 100
+
+
+    @property
+    def name(self):
+        return self._overrideable_get(
+            self.CONFIG_NAME,
+            self.indigo_entity.name + " Backlight").format(d=self)
+
+    @property
+    def backlight_set_mechansim(self):
+        return self._overrideable_get(
+            self.BACKLIGHT_SET_MECHANISM_KEY,
+            self.DEFAULT_BACKLIGHT_SET_MECHANISM, self.MAIN_CONFIG_SECTION).format(d=self)
+
+    def register(self):
+        BaseCommandableHADevice.register(self)
+        # register brightness command topic
+        self.logger.debug(
+            u'Subscribing {} with id {}:{} to brightness command topic {}'
+            .format(
+                self.hass_type,
+                self.name,
+                self.id,
+                self.brightness_command_topic))
+        get_mqtt_client().message_callback_add(
+            self.brightness_command_topic,
+            self.on_brightness_command_message)
+        get_mqtt_client().subscribe(self.brightness_command_topic)
+        self._send_brightness_state(self.indigo_entity)
+
+    # pylint: disable=unused-argument
+    def _send_state(self, dev):
+        get_mqtt_client().publish(
+            topic=self.state_topic,
+            payload=self.switch_state,
+            qos=self.state_topic_qos,
+            retain=self.state_topic_retain)
+
+    # pylint: disable=unused-argument
+    def _send_brightness_state(self, dev):
+        self.logger.debug(u'Sending brightness state of {} to {}'
+                          .format(self.brightness_level,
+                                  self.brightness_state_topic))
+        get_mqtt_client().publish(
+            topic=self.brightness_state_topic,
+            payload=unicode(self.brightness_level),
+            retain=self.brightness_command_topic_retain)
+
+    # pylint: disable=unused-argument
+    def on_brightness_command_message(self, client, userdata, msg):
+        self.logger.debug(u'Brightness Command message {} recieved on {}'
+                          .format(msg.payload, msg.topic))
+
+        if int(msg.payload) > 0:
+            self._turn_on_backlight()
+            self._set_backlight_brightness(int(msg.payload))
+            self.brightness_level = int(msg.payload)
+        else:
+            self._turn_off_backlight()
+            self.brightness_level = 0
+        self._send_brightness_state(self.indigo_entity)
+
+    def on_command_message(self, client, userdata, msg):
+        self.logger.debug(
+            u"Command message {} recieved on {}".format(msg.payload,
+                                                        msg.topic))
+        if msg.payload == self.payload_on:
+            self._turn_on_backlight()
+            self.switch_state = self.payload_on
+        elif msg.payload == self.payload_off:
+            self._turn_off_backlight()
+            self.switch_state = self.payload_off
+
+        self._send_state(self.indigo_entity)
+
+    def _turn_off_backlight(self):
+        led_off_command = [0x20, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        try:
+            indigo.insteon.sendRawExtended(self.indigo_entity.address,
+                                           led_off_command)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.error(
+                u'Unable to turn off backlight for ' % self.name)
+
+    def _turn_on_backlight(self):
+        led_on_command = [0x20, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        try:
+            indigo.insteon.sendRawExtended(self.indigo_entity.address,
+                                           led_on_command)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.error(
+                u'Unable to turn on backlight for ' % self.name)
+
+    def _set_backlight_brightness(self, level):
+        if self.backlight_set_mechansim == 'kpl':
+            level = (((level - 0) * (127 - 5)) / (100 - 0)) + 5
+            d1 = 0x00
+            d2 = 0x07
+        elif self.backlight_set_mechansim == 'swl':
+            level = (((level - 0) * (255 - 1)) / (100 - 0)) + 1
+            d1 = 0x01
+            d2 = 0x03
+        else:
+            self.logger.error(
+                u'Unknown led backlight set mechanism "{}" for {}'.format(
+                    self.backlight_set_mechansim, self.indigo_entity.name))
+            return
+
+        try:
+
+            led_brightness_command = [0x2E, 0x00, d1, d2, level, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00, 0x00]
+            indigo.insteon.sendRawExtended(self.indigo_entity.address,
+                                           led_brightness_command)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.error(
+                u'Unable to set backlight brightness for {}' % self.name)
