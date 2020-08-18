@@ -308,6 +308,9 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
             self.BACKLIGHT_SET_MECHANISM_KEY,
             self.DEFAULT_BACKLIGHT_SET_MECHANISM, self.MAIN_CONFIG_SECTION).format(d=self)
 
+    def update(self, orig_dev, new_dev):
+        pass
+
     def register(self):
         BaseCommandableHADevice.register(self)
         # register brightness command topic
