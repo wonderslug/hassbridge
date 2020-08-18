@@ -85,7 +85,17 @@ class ZWaveBatteryPoweredSensorsTypeGenerator(object):
     @staticmethod
     def generate(dev, config, logger):
         devices = {}
-        if config.create_battery_sensors and dev.batteryLevel is not None:
+        overrides = config.get_overrides_for_device(dev)
+        # pylint: disable=too-many-boolean-expressions
+        if str(dev.protocol).lower() == u'zwave' and \
+            dev.batteryLevel is not None and \
+            (
+                    (config.create_battery_sensors and
+                     'enable_battery_sensor' not in overrides)
+                    or
+                    ('enable_battery_sensor' in overrides and
+                     overrides['enable_battery_sensor'] is True)
+            ):
             device = ZWaveBatteryStateSensor(dev,
                                              config.customizations,
                                              logger,

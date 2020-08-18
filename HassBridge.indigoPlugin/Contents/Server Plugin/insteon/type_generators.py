@@ -244,11 +244,19 @@ class InsteonBatteryPoweredSensorsTypeGenerator(object):
     def generate(dev, config, logger):
         devices = {}
 
-        if config.create_battery_sensors and \
+        overrides = config.get_overrides_for_device(dev)
+        # pylint: disable=too-many-boolean-expressions
+        if str(dev.protocol).lower() == u'insteon' and \
                 str(dev.model) in ['Leak Sensor',
                                    'Open/Close Sensor',
                                    'Door Sensor',
-                                   'Motion Sensor (2844)']:
+                                   'Motion Sensor (2844)'] and \
+                (
+                    (config.create_battery_sensors and
+                     'enable_battery_sensor' not in overrides) or
+                    ('enable_battery_sensor' in overrides and
+                     overrides['enable_battery_sensor'] is True)
+                ):
             device = InsteonBatteryStateSensor(
                 dev,
                 config.customizations,
