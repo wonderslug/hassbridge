@@ -26,9 +26,8 @@ from .command_processors import INSTEON_EVENTS
 from .devices import (
     InsteonBatteryStateSensor, InsteonBinarySensor,
     InsteonButtonActivityTracker, InsteonCover, InsteonFan,
-    InsteonKeypadButtonLight, InsteonLight, InsteonLock,
-    InsteonRemote, InsteonSensor,
-    InsteonSwitch)
+    InsteonKeypadButtonLight, InsteonLedBacklight, InsteonLight, InsteonLock,
+    InsteonRemote, InsteonSensor, InsteonSwitch)
 
 INSTEON_KEYPAD_8_BUTTON_MAP = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G',
                                8: 'H'}
@@ -266,6 +265,34 @@ class InsteonBatteryPoweredSensorsTypeGenerator(object):
                 config.insteon_no_comm_minutes
             )
             devices[device.id] = device
+        return devices
+
+    @staticmethod
+    # pylint: disable=unused-argument
+    def is_bridgeable(dev):
+        return False
+
+
+class InsteonLedBacklightTypeGenerator(object):
+    @staticmethod
+    def generate(dev, config, logger):
+        devices = {}
+
+        overrides = config.get_overrides_for_device(dev)
+        if str(dev.protocol).lower() == u'insteon' and \
+            (
+                    (config.create_insteon_led_backlight_lights and
+                     'enable_led_backlight_light' not in overrides) or
+                    ('enable_led_backlight_light' in overrides and
+                     overrides['enable_led_backlight_light'] is True)
+            ):
+            firmware_version = int(dev.version)
+            if "KeypadLinc" in dev.model or (
+                    "SwitchLinc" in dev.model and firmware_version >= 0x38) \
+                    or "OutletLinc" in dev.model:
+                device = InsteonLedBacklight(dev, overrides, logger,
+                                             config.hass_discovery_prefix)
+                devices[device.id] = device
         return devices
 
     @staticmethod

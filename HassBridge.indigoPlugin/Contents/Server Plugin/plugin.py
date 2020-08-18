@@ -59,7 +59,7 @@ from hassbridge import (
 from insteon import (
     InsteonDefaultTypesGenerator, InsteonKeypadTypesGenerator,
     InsteonInputOutputTypesGenerator, InsteonRemoteTypesGenerator,
-    InsteonBatteryPoweredSensorsTypeGenerator)
+    InsteonBatteryPoweredSensorsTypeGenerator, InsteonLedBacklightTypeGenerator)
 # pylint: disable=relative-import
 from variables import VariableDefaultTypesGenerator
 # pylint: disable=relative-import
@@ -533,6 +533,7 @@ class DeviceGeneratorFactory(object):
         InsteonInputOutputTypesGenerator,
         InsteonRemoteTypesGenerator,
         InsteonBatteryPoweredSensorsTypeGenerator,
+        InsteonLedBacklightTypeGenerator,
         ZWaveDefaultTypesGenerator,
         ZWaveBatteryPoweredSensorsTypeGenerator,
         VirtualDefaultTypesGenerator

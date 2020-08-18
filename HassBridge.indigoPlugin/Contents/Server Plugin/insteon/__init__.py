@@ -25,12 +25,14 @@ from .type_generators import \
     InsteonKeypadTypesGenerator, \
     InsteonInputOutputTypesGenerator, \
     InsteonRemoteTypesGenerator, \
-    InsteonBatteryPoweredSensorsTypeGenerator
+    InsteonBatteryPoweredSensorsTypeGenerator, \
+    InsteonLedBacklightTypeGenerator
 
 __all__ = [
     'InsteonDefaultTypesGenerator',
     'InsteonKeypadTypesGenerator',
     'InsteonInputOutputTypesGenerator',
     'InsteonRemoteTypesGenerator',
-    'InsteonBatteryPoweredSensorsTypeGenerator'
+    'InsteonBatteryPoweredSensorsTypeGenerator',
+    'InsteonLedBacklightTypeGenerator'
 ]
