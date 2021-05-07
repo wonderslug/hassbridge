@@ -82,11 +82,7 @@
     <Field id="bridgableLabel" type="label">
         <Label>Devices to Bridge</Label>
     </Field>
-    <Field id="bridge_all" type="checkbox" defaultValue="false">
-        <Label>All Possible Devices:</Label>
-        <Description>(bridge all known device types)</Description>
-    </Field>
-    <Field id="devices" type="list" rows="10" visibleBindingId="bridge_all" visibleBindingValue="false">
+    <Field id="devices" type="list" rows="10" visibleBindingValue="false">
         <Label>Devices:</Label>
         <List class="self" filter="stuff" method="bridgable_devices_list_generator"/>
     </Field>
