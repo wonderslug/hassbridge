@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 import indigo
 import tzlocal
 from hass_devices import BinarySensor, Cover, Fan, Light, Lock, Sensor, Switch
-from hass_devices.base import Base, BaseHAEntity, BaseCommandableHADevice
+from hass_devices.base import Base, BaseCommandableHADevice, BaseHAEntity
 from hassbridge import TOPIC_ROOT, TimedUpdateCheck, get_mqtt_client
 
 from .command_processors import (
@@ -196,8 +196,8 @@ class InsteonButtonActivityTracker(BaseHAEntity, InsteonCommandProcessor):
         name = self._overrideable_get(self.CONFIG_NAME,
                                       self.indigo_entity.name + " Button {} {}"
                                       .format(self.label,
-                                              self.activity_type))\
-                                      .format(d=self).lower()
+                                              self.activity_type)) \
+            .format(d=self).lower()
         name = re.sub(r"[^\w\s]", '', name)
         name = re.sub(r"\s+", '_', name)
         return name
@@ -281,7 +281,6 @@ class InsteonBatteryStateSensor(BinarySensor, TimedUpdateCheck):
 
 
 class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
-
     BACKLIGHT_SET_MECHANISM_KEY = "backlight_set_mechansim"
     DEFAULT_BACKLIGHT_SET_MECHANISM = "kpl"
 
@@ -295,7 +294,6 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         self.switch_state = self.payload_on
         self.brightness_level = 100
 
-
     @property
     def name(self):
         return self._overrideable_get(
@@ -306,7 +304,8 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
     def backlight_set_mechansim(self):
         return self._overrideable_get(
             self.BACKLIGHT_SET_MECHANISM_KEY,
-            self.DEFAULT_BACKLIGHT_SET_MECHANISM, self.MAIN_CONFIG_SECTION).format(d=self)
+            self.DEFAULT_BACKLIGHT_SET_MECHANISM,
+            self.MAIN_CONFIG_SECTION).format(d=self)
 
     def update(self, orig_dev, new_dev):
         pass
@@ -316,7 +315,7 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         # register brightness command topic
         self.logger.debug(
             u'Subscribing {} with id {}:{} to brightness command topic {}'
-            .format(
+                .format(
                 self.hass_type,
                 self.name,
                 self.id,
