@@ -216,9 +216,11 @@ class BaseAvailableHAEntity(BaseHAEntity):
                                                     logger,
                                                     discovery_prefix)
         self.config.update({
-            self.CONFIG_AVAILABILITY_TOPIC: self.availability_topic,
-            self.CONFIG_PAYLOAD_AVAILABLE: self.payload_available,
-            self.CONFIG_PAYLOAD_NOT_AVAILALE: self.payload_not_available
+            "availability": [{
+                "topic": self.availability_topic,
+                self.CONFIG_PAYLOAD_AVAILABLE: self.payload_available,
+                self.CONFIG_PAYLOAD_NOT_AVAILALE: self.payload_not_available
+            }]
         })
 
     @property
@@ -370,7 +372,12 @@ class BaseStatefulHADevice(BaseStatefulHAEntity, UpdatableDevice):
                 'manufacturer': u'{} via Indigo MQTT Bridge'.format(
                     indigo_entity.protocol),
                 'model': indigo_entity.model,
-                'name': indigo_entity.name
+                'name': indigo_entity.name,
+                'connections': [
+                    ['insteon', indigo_entity.address],
+                    ['indigo', indigo_entity.id],
+
+                ]
             }
         })
 
