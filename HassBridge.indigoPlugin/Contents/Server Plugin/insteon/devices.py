@@ -315,7 +315,7 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         # register brightness command topic
         self.logger.debug(
             u'Subscribing {} with id {}:{} to brightness command topic {}'
-                .format(
+            .format(
                 self.hass_type,
                 self.name,
                 self.id,

@@ -90,8 +90,8 @@ class Fan(BaseCommandableHADevice):
         # register brightness command topic
         self.logger.debug(
             u"Subscribing {} with id {}:{} to speed command topic {}"
-                .format(self.hass_type, self.name, self.id,
-                        self.percentage_command_topic))
+            .format(self.hass_type, self.name, self.id,
+                    self.percentage_command_topic))
         get_mqtt_client().message_callback_add(
             self.percentage_command_topic,
             self.on_percentage_command_message)
