@@ -20,11 +20,13 @@ as Sensors in Home Assistant.
 * Expose Indigo Variables as Home Assistant Sensors
 * Allows for customization how Indigo devices are represented in Home Assistant. 
 
+## Compatablility Warnings
+* As of v1.4.0, Fan support will not work with less than Home Assistant v2021.4
 
 ## Dependencies
 ### MQTT Server
 HassBridge uses MQTT to communicate with Home Assistant.  If you are using Hass.io you can use one of serveral MQTT 
-addons that are available.  Or you can setup your own MQTT/Mosquito server.  As long as its setup and availabel to both 
+addons that are available.  Or you can set up your own MQTT/Mosquito server.  As long as its setup and availabel to both 
 Indigo and Home Assistant it should work.
  
  
