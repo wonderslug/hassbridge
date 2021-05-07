@@ -293,6 +293,9 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         self.parent_id = indigo_entity.id
         self.switch_state = self.payload_on
         self.brightness_level = 100
+        self.config.update({
+            'on_command_type': 'last'
+        })
 
     @property
     def name(self):
@@ -356,6 +359,8 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         else:
             self._turn_off_backlight()
             self.brightness_level = 0
+            self.switch_state = self.payload_off
+            self._send_state(self.indigo_entity)
         self._send_brightness_state(self.indigo_entity)
 
     def on_command_message(self, client, userdata, msg):
@@ -365,9 +370,12 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
         if msg.payload == self.payload_on:
             self._turn_on_backlight()
             self.switch_state = self.payload_on
+            self._set_backlight_brightness(self.brightness_level)
+
         elif msg.payload == self.payload_off:
             self._turn_off_backlight()
             self.switch_state = self.payload_off
+            self._set_backlight_brightness(0)
 
         self._send_state(self.indigo_entity)
 
@@ -392,6 +400,7 @@ class InsteonLedBacklight(Light, InsteonGeneralCommandProcessor):
                 u'Unable to turn on backlight for ' % self.name)
 
     def _set_backlight_brightness(self, level):
+
         if self.backlight_set_mechansim == 'kpl':
             level = (((level - 0) * (127 - 5)) / (100 - 0)) + 5
             d1 = 0x00
